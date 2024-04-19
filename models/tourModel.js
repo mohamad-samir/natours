@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -7,7 +8,10 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A tour must have a name'],
       unique: true,
-      trim: true
+      trim: true,
+      maxLength: [40, 'A tour must have less than or equal 40 characters'],
+      minLength: [10, 'A tour must have more than or equal 10 characters']
+      // validate: [validator.isAlpha, 'tour name must be in characters']
     },
     slug: String,
     duration: { type: Number, required: [true, 'A tour must have a duration'] },
@@ -17,14 +21,32 @@ const tourSchema = new mongoose.Schema(
     },
     difficulty: {
       type: String,
-      required: [true, 'A tour must have a diffculity']
+      required: [true, 'A tour must have a diffculity'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: "must be 'easy', 'medium' or 'difficult'"
+      }
     },
 
-    ratingsAverage: { type: Number, default: 4.5 },
+    ratingsAverage: {
+      type: Number,
+      default: 4.5,
+      min: [1, 'rating must be more than or equal 1'],
+      max: [5, 'rating must be less than or equal 5']
+    },
     ratingsQuantity: { type: Number, default: 0 },
 
     price: { type: Number, required: [true, 'A tour must have a price'] },
-    priceDiscount: { type: Number },
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function(val) {
+          //this works only with new doc cereation not update
+          return val < this.price;
+        },
+        message: 'Discount must be less than the price'
+      }
+    },
     summary: { type: String, trim: true },
     description: {
       type: String,
