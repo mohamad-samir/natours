@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
+// const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -9,58 +9,75 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true,
-      maxLength: [40, 'A tour must have less than or equal 40 characters'],
-      minLength: [10, 'A tour must have more than or equal 10 characters']
-      // validate: [validator.isAlpha, 'tour name must be in characters']
+      maxlength: [40, 'A tour name must have less or equal then 40 characters'],
+      minlength: [10, 'A tour name must have more or equal then 10 characters']
+      // validate: [validator.isAlpha, 'Tour name must only contain characters']
     },
     slug: String,
-    duration: { type: Number, required: [true, 'A tour must have a duration'] },
+    duration: {
+      type: Number,
+      required: [true, 'A tour must have a duration']
+    },
     maxGroupSize: {
       type: Number,
       required: [true, 'A tour must have a group size']
     },
     difficulty: {
       type: String,
-      required: [true, 'A tour must have a diffculity'],
+      required: [true, 'A tour must have a difficulty'],
       enum: {
         values: ['easy', 'medium', 'difficult'],
-        message: "must be 'easy', 'medium' or 'difficult'"
+        message: 'Difficulty is either: easy, medium, difficult'
       }
     },
-
     ratingsAverage: {
       type: Number,
       default: 4.5,
-      min: [1, 'rating must be more than or equal 1'],
-      max: [5, 'rating must be less than or equal 5']
+      min: [1, 'Rating must be above 1.0'],
+      max: [5, 'Rating must be below 5.0']
     },
-    ratingsQuantity: { type: Number, default: 0 },
-
-    price: { type: Number, required: [true, 'A tour must have a price'] },
+    ratingsQuantity: {
+      type: Number,
+      default: 0
+    },
+    price: {
+      type: Number,
+      required: [true, 'A tour must have a price']
+    },
     priceDiscount: {
       type: Number,
       validate: {
         validator: function(val) {
-          //this works only with new doc cereation not update
+          // this only points to current doc on NEW document creation
           return val < this.price;
         },
-        message: 'Discount must be less than the price'
+        message: 'Discount price ({VALUE}) should be below regular price'
       }
     },
-    summary: { type: String, trim: true },
-    description: {
+    summary: {
       type: String,
       trim: true,
       required: [true, 'A tour must have a description']
     },
+    description: {
+      type: String,
+      trim: true
+    },
     imageCover: {
       type: String,
-      required: [true, 'A tour must have a image']
+      required: [true, 'A tour must have a cover image']
     },
     images: [String],
-    cereatedAt: { type: Date, default: Date.now() },
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+      select: false
+    },
     startDates: [Date],
-    secretTour: { type: Boolean, default: false }
+    secretTour: {
+      type: Boolean,
+      default: false
+    }
   },
   {
     toJSON: { virtuals: true },
@@ -72,9 +89,14 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
-//Docoment middleware runs before .save() and .cereate()
+// DOCUMENT MIDDLEWARE: runs before .save() and .create()
+tourSchema.pre('save', function(next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
 // tourSchema.pre('save', function(next) {
-//   this.slug = slugify(this.name, { lower: true });
+//   console.log('Will save document...');
 //   next();
 // });
 
@@ -83,24 +105,24 @@ tourSchema.virtual('durationWeeks').get(function() {
 //   next();
 // });
 
-//Query middleware
-//all commands starts with find including find one
+// QUERY MIDDLEWARE
 // tourSchema.pre('find', function(next) {
 tourSchema.pre(/^find/, function(next) {
   this.find({ secretTour: { $ne: true } });
+
   this.start = Date.now();
   next();
 });
 
 tourSchema.post(/^find/, function(docs, next) {
-  console.log(`Query took ${Date.now() - this.start} ms`);
-  console.log(docs);
+  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
   next();
 });
 
-//Aggregation middleware
+// AGGREGATION MIDDLEWARE
 tourSchema.pre('aggregate', function(next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+
   console.log(this.pipeline());
   next();
 });
