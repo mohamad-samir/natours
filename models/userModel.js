@@ -2,49 +2,57 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+// Define the schema for the User model
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'A user must have a name']
+    required: [true, 'A user must have a name'] // Validation to ensure name is provided
   },
   email: {
     type: String,
-    required: [true, 'A user must have an email'],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email']
+    required: [true, 'A user must have an email'], // Validation to ensure email is provided
+    unique: true, // Making sure the email is unique in the database
+    lowercase: true, // Convert email to lowercase before saving
+    validate: [validator.isEmail, 'Please provide a valid email'] // Validate email format
   },
   photo: {
-    type: String
+    type: String // Optional field for user photo
+  },
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user'
   },
   password: {
     type: String,
-    required: [true, 'A user must have a password'],
-    minlength: 8,
-    select: false
+    required: [true, 'A user must have a password'], // Validation for password
+    minlength: 8, // Minimum length of 8 characters for the password
+    select: false // Do not return the password by default when querying
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Please confirm your password'],
+    required: [true, 'Please confirm your password'], // Confirm password is required
     validator: {
-      //works only with cereate and save
+      // Validator to ensure password and confirm password are the same
       validate: function(el) {
         return el === this.password;
       },
-      message: 'different passwords'
+      message: 'different passwords' // Error message if passwords are different
     }
   },
-  passwordChangedAt: Date
+  passwordChangedAt: Date // Stores the time when the password was last changed
 });
 
+// Middleware to hash the password before saving the user document
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password')) return next(); // Only hash the password if it has been modified
 
-  this.password = await bcrypt.hash(this.password, 12);
-  this.passwordConfirm = undefined;
+  this.password = await bcrypt.hash(this.password, 12); // Hash the password with a cost of 12
+  this.passwordConfirm = undefined; // Remove password confirm field
   next();
 });
 
+// Method to compare candidate password with user's password
 userSchema.methods.correctPassword = async function(
   candidatePassword,
   userPsaaword
@@ -52,15 +60,16 @@ userSchema.methods.correctPassword = async function(
   return await bcrypt.compare(candidatePassword, userPsaaword);
 };
 
+// Check if password was changed after the JWT token was issued
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   if (this.passwordChangedAt) {
-    const changedTimestamp = parseInt(this.passwordChangedAt / 1000, 10);
-    return JWTTimestamp < changedTimestamp;
+    const changedTimestamp = parseInt(this.passwordChangedAt / 1000, 10); // Convert to timestamp
+    return JWTTimestamp < changedTimestamp; // Compare timestamps
   }
   return false;
 };
 
 //userSchema.index({ email: 1 }, { unique: true }); // Define the unique index
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema); // Create the User model
 
-module.exports = User;
+module.exports = User; // Export the User model

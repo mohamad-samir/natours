@@ -20,7 +20,8 @@ exports.signUp = catchAsync(async (req, res, next) => {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm
+    passwordConfirm: req.body.passwordConfirm,
+    role: req.body.role
   });
 
   const token = signToken(newUser._id); // Generate token for new user
@@ -84,3 +85,16 @@ exports.protect = catchAsync(async (req, res, next) => {
   // Continue to the next middleware
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  // Middleware to restrict access to only certain roles
+  return (req, res, next) => {
+    // Check if user role is not included in allowable roles
+    if (!roles.includes(req.user.role))
+      // If role is not included, reject the request with a permissions error
+      return next(new AppError('you have no permission', 403));
+
+    // If role is valid, proceed with the request
+    next();
+  };
+};
