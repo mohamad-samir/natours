@@ -56,6 +56,17 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+userSchema.pre('save', function(next) {
+  // If the password has not been modified or the document is new, move to the next middleware
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // Set the passwordChangedAt field to the current date and time
+  this.passwordChangedAt = Date.now(); //to ensure that token made after password changed
+
+  // Move to the next middleware
+  next();
+});
+
 // Method to compare candidate password with user's password
 userSchema.methods.correctPassword = async function(
   candidatePassword,
@@ -77,10 +88,10 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function() {
   // Generate a random token using 32 random bytes and convert it to a hexadecimal string
   const resetToken = crypto.randomBytes(32).toString('hex');
-
+  console.log(resetToken);
   // Hash the reset token using the SHA-256 algorithm
   // and store the hashed token in the PasswordResetToken field of the user document
-  this.PasswordResetToken = crypto
+  this.passwordResetToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
