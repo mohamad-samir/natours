@@ -44,7 +44,8 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date, // Stores the time when the password was last changed
 
   passwordResetToken: String,
-  passwordResetExpires: Date
+  passwordResetExpires: Date,
+  active: { type: Boolean, default: true, select: false }
 });
 
 // Middleware to hash the password before saving the user document
@@ -67,6 +68,12 @@ userSchema.pre('save', function(next) {
   next();
 });
 
+userSchema.pre(/^find/, function(next) {
+  // Modify the query to include only active users
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 // Method to compare candidate password with user's password
 userSchema.methods.correctPassword = async function(
   candidatePassword,
@@ -77,10 +84,16 @@ userSchema.methods.correctPassword = async function(
 
 // Check if password was changed after the JWT token was issued
 userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+  // Check if the passwordChangedAt field exists and if it does, proceed with the comparison
   if (this.passwordChangedAt) {
-    const changedTimestamp = parseInt(this.passwordChangedAt / 1000, 10); // Convert to timestamp
-    return JWTTimestamp < changedTimestamp; // Compare timestamps
+    // Convert the passwordChangedAt timestamp to seconds (UNIX timestamp)
+    const changedTimestamp = parseInt(this.passwordChangedAt / 1000, 10);
+
+    // Compare the JWT token timestamp with the passwordChangedAt timestamp
+    return JWTTimestamp < changedTimestamp; // If the JWT token was issued before the password was last changed, return true
   }
+
+  // If the passwordChangedAt field doesn't exist, return false
   return false;
 };
 
@@ -88,7 +101,6 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function() {
   // Generate a random token using 32 random bytes and convert it to a hexadecimal string
   const resetToken = crypto.randomBytes(32).toString('hex');
-  console.log(resetToken);
   // Hash the reset token using the SHA-256 algorithm
   // and store the hashed token in the PasswordResetToken field of the user document
   this.passwordResetToken = crypto
