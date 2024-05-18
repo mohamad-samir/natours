@@ -1,5 +1,6 @@
 const Review = require('../models/reviewModel');
 const catchAsync = require('../utils/catchAsync');
+const factory = require('./handlerFactory');
 
 // Define and export the getAllReviews function using catchAsync to handle errors
 exports.getAllReviews = catchAsync(async (req, res, next) => {
@@ -36,3 +37,5 @@ exports.createReview = catchAsync(async (req, res, next) => {
     data: { review: newReview } // Include the newly created review in the response data
   });
 });
+
+exports.deleteReview = factory.deleteOne(Review);

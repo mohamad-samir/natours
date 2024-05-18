@@ -1,6 +1,7 @@
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError'); // Import custom error handling utility
+const factory = require('./handlerFactory');
 
 // Function to filter object properties based on allowed fields
 const filterObj = (obj, ...allowedFields) => {
@@ -81,9 +82,5 @@ exports.updateUser = (req, res) => {
     message: 'This route is not yet defined!'
   });
 };
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!'
-  });
-};
+
+exports.deleteUser = factory.deleteOne(User);
