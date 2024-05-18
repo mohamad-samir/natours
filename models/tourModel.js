@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const User = require('./userModel');
+const { promises } = require('nodemailer/lib/xoauth2');
 // const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
@@ -77,7 +79,25 @@ const tourSchema = new mongoose.Schema(
     secretTour: {
       type: Boolean,
       default: false
-    }
+    },
+    startLocation: {
+      //GeoJSON
+      type: { type: String, default: 'Point', enum: ['Point'] },
+      coordinates: [Number],
+      adress: String,
+      description: String
+    },
+    locations: [
+      {
+        //GeoJSON
+        type: { type: String, default: 'Point', enum: ['Point'] },
+        coordinates: [Number],
+        adress: String,
+        description: String,
+        day: Number
+      }
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }]
   },
   {
     toJSON: { virtuals: true },
@@ -89,12 +109,34 @@ tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
 
+// Define a virtual field 'reviews' in the Tour schema
+tourSchema.virtual('reviews', {
+  ref: 'Review', // Reference the 'Review' model
+  foreignField: 'tour', // The field in the 'Review' model that refers to the 'Tour' model
+  localField: '_id' // The field in the 'Tour' model that the 'Review' model's 'tour' field refers to
+});
+
 // DOCUMENT MIDDLEWARE: runs before .save() and .create()
 tourSchema.pre('save', function(next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
 
+/* // Define the pre-save middleware for the tourSchema
+tourSchema.pre('save', async function(next) {
+  // Map over the guides array, which contains user IDs, and create an array of promises.
+  // Each promise resolves to a User document found by its ID.
+  const guidesPromises = this.guides.map(async id => await User.findById(id));
+
+  // Wait for all the promises to resolve. Once resolved, the guidesPromises array
+  // will contain the full User documents instead of just their IDs.
+  this.guides = await Promise.all(guidesPromises);
+
+  // Call next() to proceed with the save operation. This signals Mongoose to
+  // move to the next middleware (if any) or to complete the save operation.
+  next();
+});
+ */
 // tourSchema.pre('save', function(next) {
 //   console.log('Will save document...');
 //   next();
@@ -111,6 +153,20 @@ tourSchema.pre(/^find/, function(next) {
   this.find({ secretTour: { $ne: true } });
 
   this.start = Date.now();
+  next();
+});
+
+// Pre-query middleware for the 'Tour' schema
+tourSchema.pre(/^find/, function(next) {
+  // 'this' points to the current query being executed
+
+  // Populate the 'guides' field in the query result with full User documents
+  // Select only the necessary fields: exclude '__v' and 'passwordChangedAt'
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt'
+  });
+
   next();
 });
 
