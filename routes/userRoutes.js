@@ -15,6 +15,14 @@ router.patch(
   authController.protect,
   authController.updatePassword
 );
+
+router.get(
+  '/me',
+  authController.protect, // Middleware to ensure user is authenticated
+  userController.getMe, // Middleware to modify request parameters to fetch data of the authenticated user
+  userController.getUser // Controller function to retrieve user data
+);
+
 router.patch('/updateMe', authController.protect, userController.updateMe);
 router.delete('/deleteMe', authController.protect, userController.deleteMe);
 

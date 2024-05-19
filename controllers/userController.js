@@ -21,18 +21,13 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
+exports.getMe = (req, res, next) => {
+  // Set the ID parameter of the request to the authenticated user's ID
+  req.params.id = req.user.id;
+  next();
+};
 
-  // SEND RESPONSE
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
-    data: {
-      users
-    }
-  });
-});
+exports.getAllUsers = factory.getAll(User);
 
 // Define and export the updateMe function using catchAsync to handle errors
 exports.updateMe = catchAsync(async (req, res, next) => {
@@ -80,12 +75,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   res.status(204).json({ status: 'success', data: null });
 });
 
-exports.getUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!'
-  });
-};
+exports.getUser = factory.getOne(User);
 
 exports.createUser = (req, res) => {
   res.status(500).json({

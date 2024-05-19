@@ -41,12 +41,17 @@ class APIFeatures {
   }
 
   paginate() {
-    const page = this.queryString.page * 1 || 1;
-    const limit = this.queryString.limit * 1 || 100;
+    // 1. Extract pagination parameters from the query string
+    const page = this.queryString.page * 1 || 1; // Convert page parameter to number, default to 1 if not provided
+    const limit = this.queryString.limit * 1 || 100; // Convert limit parameter to number, default to 100 if not provided
+
+    // 2. Calculate the number of documents to skip based on page and limit
     const skip = (page - 1) * limit;
 
+    // 3. Apply skip and limit to the current query
     this.query = this.query.skip(skip).limit(limit);
 
+    // 4. Return this (for chaining purposes)
     return this;
   }
 }
