@@ -113,18 +113,23 @@ exports.protect = catchAsync(async (req, res, next) => {
   next();
 });
 
+// Middleware to restrict access based on user roles
 exports.restrictTo = (...roles) => {
-  // Middleware to restrict access to only certain roles
+  // Return a middleware function
   return (req, res, next) => {
-    // Check if user role is not included in allowable roles
-    if (!roles.includes(req.user.role))
-      // If role is not included, reject the request with a permissions error
-      return next(new AppError('you have no permission', 403));
+    // Check if the user's role is included in the allowed roles
+    if (!roles.includes(req.user.role)) {
+      // If the user's role is not allowed, create an AppError with a 403 status code
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
 
-    // If role is valid, proceed with the request
+    // If the user's role is allowed, proceed to the next middleware
     next();
   };
 };
+
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Find the user using the email address provided in the request
   const user = await User.findOne({ email: req.body.email });

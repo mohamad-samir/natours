@@ -115,7 +115,6 @@ userSchema.methods.createPasswordResetToken = function() {
   return resetToken;
 };
 
-//userSchema.index({ email: 1 }, { unique: true }); // Define the unique index
 const User = mongoose.model('User', userSchema); // Create the User model
 
 module.exports = User; // Export the User model

@@ -20,22 +20,17 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
   });
 });
 
-// Define and export the createReview function using catchAsync to handle errors
-exports.createReview = catchAsync(async (req, res, next) => {
-  // If the request body does not have a 'tour' field, set it to the 'tourId' parameter from the URL
+exports.setTourUserIds = (req, res, next) => {
+  // If the request body does not have a 'tour' field,
+  // set it to the 'tourId' parameter from the URL
   if (!req.body.tour) req.body.tour = req.params.tourId;
 
-  // Optionally, you might want to also set the user field from the authenticated user's ID
+  // set the user field from the authenticated user's ID
   if (!req.body.user) req.body.user = req.user.id;
+};
 
-  // Create a new review document from the request body
-  const newReview = await Review.create(req.body);
+exports.createReview = factory.createOne(Review);
 
-  // Send a JSON response with the newly created review
-  res.status(201).json({
-    status: 'success', // Indicate that the creation was successful
-    data: { review: newReview } // Include the newly created review in the response data
-  });
-});
+exports.updateReview = factory.updateOne(Review);
 
 exports.deleteReview = factory.deleteOne(Review);
