@@ -62,7 +62,7 @@ userSchema.pre('save', function(next) {
   if (!this.isModified('password') || this.isNew) return next();
 
   // Set the passwordChangedAt field to the current date and time
-  this.passwordChangedAt = Date.now(); //to ensure that token made after password changed
+  this.passwordChangedAt = Date.now() - 1000; //to ensure that token made after password changed
 
   // Move to the next middleware
   next();
@@ -74,11 +74,13 @@ userSchema.pre(/^find/, function(next) {
   next();
 });
 
-// Method to compare candidate password with user's password
 userSchema.methods.correctPassword = async function(
   candidatePassword,
   userPsaaword
 ) {
+  // Compare the candidate password (plain text) with the hashed user password
+  // bcrypt.compare() is an asynchronous function that returns a Promise,
+  // which resolves to true if the passwords match, and false otherwise.
   return await bcrypt.compare(candidatePassword, userPsaaword);
 };
 

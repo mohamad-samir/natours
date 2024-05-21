@@ -34,34 +34,38 @@ exports.deleteTour = factory.deleteOne(Tour);
 //   });
 // });
 
+// Define and export the getTourStats function using catchAsync to handle errors
 exports.getTourStats = catchAsync(async (req, res, next) => {
+  // Perform the aggregation on the Tour model
   const stats = await Tour.aggregate([
     {
-      $match: { ratingsAverage: { $gte: 4.5 } }
+      $match: { ratingsAverage: { $gte: 4.5 } } // Match tours with ratingsAverage >= 4.5
     },
     {
       $group: {
-        _id: { $toUpper: '$difficulty' },
-        numTours: { $sum: 1 },
-        numRatings: { $sum: '$ratingsQuantity' },
-        avgRating: { $avg: '$ratingsAverage' },
-        avgPrice: { $avg: '$price' },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' }
+        _id: { $toUpper: '$difficulty' }, // Group by the difficulty field, converting it to uppercase
+        numTours: { $sum: 1 }, // Count the number of tours
+        numRatings: { $sum: '$ratingsQuantity' }, // Sum the ratingsQuantity field
+        avgRating: { $avg: '$ratingsAverage' }, // Calculate the average of ratingsAverage
+        avgPrice: { $avg: '$price' }, // Calculate the average of price
+        minPrice: { $min: '$price' }, // Find the minimum price
+        maxPrice: { $max: '$price' } // Find the maximum price
       }
     },
     {
-      $sort: { avgPrice: 1 }
+      $sort: { avgPrice: 1 } // Sort the results by avgPrice in ascending order
     }
+    // Uncomment the following block if you want to exclude 'EASY' difficulty from the results
     // {
     //   $match: { _id: { $ne: 'EASY' } }
     // }
   ]);
 
+  // Send the response with the calculated statistics
   res.status(200).json({
-    status: 'success',
+    status: 'success', // Indicate that the request was successful
     data: {
-      stats
+      stats // Include the stats data in the response
     }
   });
 });

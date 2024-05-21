@@ -13,11 +13,12 @@ in the nested routes.
 This setup is necessary for accessing the tourId parameter in the review routes.
 */
 
+router.use(authController.protect); // Middleware to ensure user is authenticated
+
 router
   .route('/')
   .get(reviewController.getAllReviews)
   .post(
-    authController.protect,
     authController.restrictTo('user'),
     reviewController.setTourUserIds,
     reviewController.createReview
@@ -25,8 +26,14 @@ router
 
 router
   .route('/:id')
-  .patch(reviewController.updateReview)
+  .patch(
+    authController.restrictTo('user', 'admin'),
+    reviewController.updateReview
+  )
   .get(reviewController.getReview)
-  .delete(reviewController.deleteReview);
+  .delete(
+    authController.restrictTo('user', 'admin'),
+    reviewController.deleteReview
+  );
 
 module.exports = router;

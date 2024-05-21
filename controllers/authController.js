@@ -76,40 +76,44 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+// Middleware to protect routes and ensure the user is authenticated
 exports.protect = catchAsync(async (req, res, next) => {
   let token;
-  // Check if authorization header is present and starts with 'Bearer'
+
+  // 1. Check if the authorization header contains a token and if it starts with 'Bearer'
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    // Extract the token part after 'Bearer'
+    // Extract the token from the authorization header
     token = req.headers.authorization.split(' ')[1];
   }
 
-  // If no token found, throw an authorization error
+  // 2. If no token is found, return an error indicating the user is not logged in
   if (!token) return next(new AppError('You are not logged in', 401));
 
-  // Decode the token to get user data
-  //If the token cannot be decoded, it means it is either invalid or has been tampered with.
+  // 3. Verify the token using the JWT secret
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  // Fetch the user based on the ID from the decoded token
+  // 4. Find the user associated with the decoded token ID
   const currentUser = await User.findById(decoded.id);
-  // Check if user no longer exists
   if (!currentUser) {
-    return next(new AppError('User belong to this token doesnt exist', 401));
+    return next(
+      new AppError('User belonging to this token does not exist', 401)
+    );
   }
 
-  // Check if the user has changed their password after the token was issued
+  // 5. Check if the user changed their password after the token was issued
   if (currentUser.changedPasswordAfter(decoded.iat)) {
-    return new AppError('user recently changed password', 401);
+    return next(
+      new AppError('User recently changed password. Please log in again.', 401)
+    );
   }
 
-  // Assign user data to the request object
+  // 6. Attach the current user to the request object
   req.user = currentUser;
 
-  // Continue to the next middleware
+  // 7. Call the next middleware in the stack
   next();
 });
 
