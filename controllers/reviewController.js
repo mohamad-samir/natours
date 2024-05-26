@@ -11,6 +11,16 @@ exports.setTourUserIds = (req, res, next) => {
 
   // set the user field from the authenticated user's ID
   if (!req.body.user) req.body.user = req.user.id;
+  next(); // next() call in the setTourUserIds function,
+  //  is necessary to pass control to the next middleware or route handler.
+  /**router
+  .route('/')
+  .get(reviewController.getAllReviews)
+  .post(
+    authController.restrictTo('user'),
+    reviewController.setTourUserIds, (without next you will stuck here)
+    reviewController.createReview
+  ); */
 };
 
 exports.getReview = factory.getOne(Review);

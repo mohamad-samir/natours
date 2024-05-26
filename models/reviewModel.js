@@ -30,6 +30,11 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+reviewSchema.index({ user: 1, tour: 1 }, { unique: true });
+/** Adding an index to the reviewSchema with the combination of user and tour fields
+ * ensures that each user can only write one review per tour. This is useful to prevent
+ * duplicate reviews by the same user for the same tour.
+ */
 reviewSchema.pre(/^find/, function(next) {
   // this.populate({
   //   path: 'tour',
