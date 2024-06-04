@@ -9,7 +9,7 @@ const reviewSchema = new mongoose.Schema(
     },
     rating: { type: Number, min: 1, max: 5 },
     createdAt: { type: Date, default: Date.now },
-    user: [
+    /*  user: [
       {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
@@ -23,6 +23,33 @@ const reviewSchema = new mongoose.Schema(
         required: [true, 'review must belong to a tour']
       }
     ]
+  } */
+    /**
+The schema initially had the user field as an array of references. 
+When trieing to populate user data, it may not have worked correctly because of this structure.
+With the array structure, the populated data might not have been in the expected format, 
+or it might not have populated at all.
+
+the Pug template attempted to access review.user.photo. If the user field was not populated correctly, 
+review.user would be undefined, making review.user.photo also undefined.
+
+When review.user.photo is undefined, the template generates an image tag like this:
+
+<img class="reviews__avatar-img" src="/img/users/undefined" alt="undefined">
+Server Handling
+
+The server does not have a file at /img/users/undefined, so it responds with a 404 error.
+ */
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: [true, 'review must belong to a user']
+    },
+    tour: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Tour',
+      required: [true, 'review must belong to a tour']
+    }
   },
   {
     toJSON: { virtuals: true },
