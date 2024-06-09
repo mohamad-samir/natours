@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -47,7 +48,7 @@ const connectSrcUrls = [
   'https://api.mapbox.com/',
   'https://a.tiles.mapbox.com/',
   'https://b.tiles.mapbox.com/',
-  'https://events.mapbox.com/'
+  'ws://127.0.0.1:*' // Allow WebSocket connections to any port on localhost
 ];
 
 const fontSrcUrls = [
@@ -91,6 +92,8 @@ app.use('/api', limiter);
 
 // Middleware to parse JSON requests and limit the size to 10kb
 app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
 
 // Middleware to sanitize data to prevent NoSQL injection attacks
 app.use(mongoSanitize());
@@ -115,6 +118,8 @@ app.use(
 // Custom middleware to add the current timestamp to the request object
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString(); // Add requestTime property to request object
+  //console.log(req.cookies);
+
   next(); // Pass control to the next middleware function
 });
 

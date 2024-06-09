@@ -1,110 +1,112 @@
-// Import the custom AppError class from the utils directory
-const AppError = require('./../utils/appError');
+const AppError = require('./../utils/appError'); // Custom error class for application-specific errors
 
-// Handle errors related to invalid MongoDB ObjectId values
+// Handles MongoDB cast errors (e.g., invalid ObjectId)
 const handleCastErrorDB = err => {
-  // Create a meaningful error message that includes the invalid path and value
-  const message = `Invalid ${err.path}: ${err.value}.`;
-  // Return a new AppError instance with the message and a 400 Bad Request status code
-  return new AppError(message, 400);
+  const message = `Invalid ${err.path}: ${err.value}.`; // Constructs a user-friendly error message
+  return new AppError(message, 400); // Returns a new AppError with the constructed message and a 400 status code
 };
 
-// Handle errors when a JSON Web Token is invalid
-const handleJWTError = () =>
-  new AppError('Invalid web token. Please log in again.', 401);
-
-// Handle errors when a JSON Web Token has expired
-const handleJWTExpiredError = () =>
-  new AppError('Expired web token. Please log in again.', 401);
-
-// Handle errors when there are duplicate fields in the database
+// Handles MongoDB duplicate field errors (e.g., duplicate keys)
 const handleDuplicateFieldsDB = err => {
-  // Extract the duplicate field value from the error message using a regular expression
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-  console.log(value);
+  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0]; // Extracts the duplicate field value from the error message
+  console.log(value); // Logs the duplicate value to the console for debugging
 
-  // Create a meaningful error message that includes the duplicate field value
-  const message = `Duplicate field value: ${value}. Please use another value!`;
-  // Return a new AppError instance with the message and a 400 Bad Request status code
-  return new AppError(message, 400);
+  const message = `Duplicate field value: ${value}. Please use another value!`; // Constructs a user-friendly error message
+  return new AppError(message, 400); // Returns a new AppError with the constructed message and a 400 status code
 };
 
-// Handle validation errors from MongoDB
+// Handles MongoDB validation errors (e.g., required fields, min length)
 const handleValidationErrorDB = err => {
-  // Extract all validation error messages into an array
-  const errors = Object.values(err.errors).map(el => el.message);
+  const errors = Object.values(err.errors).map(el => el.message); // Maps validation error messages into an array
 
-  // Create a meaningful error message that includes all validation errors
-  const message = `Invalid input data. ${errors.join('. ')}`;
-  // Return a new AppError instance with the message and a 400 Bad Request status code
-  return new AppError(message, 400);
+  const message = `Invalid input data. ${errors.join('. ')}`; // Constructs a user-friendly error message
+  return new AppError(message, 400); // Returns a new AppError with the constructed message and a 400 status code
 };
 
-// Send detailed error information in the development environment
-const sendErrorDev = (err, res) => {
-  // Send a JSON response with the error status, message, stack trace, and other details
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack
+// Handles invalid JWT errors
+const handleJWTError = () =>
+  new AppError('Invalid token. Please log in again!', 401); // Returns a new AppError with a 401 status code
+
+// Handles expired JWT errors
+const handleJWTExpiredError = () =>
+  new AppError('Your token has expired! Please log in again.', 401); // Returns a new AppError with a 401 status code
+
+// Sends error response in development environment
+const sendErrorDev = (err, req, res) => {
+  // For API requests
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack
+    });
+  }
+
+  // For rendered website requests
+  console.error('ERROR 💥', err); // Logs the error to the console for debugging
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: err.message
   });
 };
 
-// Send minimal error information in the production environment
-const sendErrorProd = (err, res) => {
-  // Check if the error is operational (i.e., an anticipated error that we can handle gracefully)
-  if (err.isOperational) {
-    // Send a JSON response with the error status and message
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message
-    });
-  } else {
-    // For programming or unknown errors, don't leak error details to the client
-
-    // 1) Log the error for debugging purposes
-    console.error('ERROR 💥', err);
-
-    // 2) Send a generic error message to the client
-    res.status(500).json({
+// Sends error response in production environment
+const sendErrorProd = (err, req, res) => {
+  // For API requests
+  if (req.originalUrl.startsWith('/api')) {
+    // Operational, trusted error: send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message
+      });
+    }
+    // Programming or unknown error: don't leak error details
+    console.error('ERROR 💥', err); // Logs the error to the console for debugging
+    return res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!'
     });
   }
+
+  // For rendered website requests
+  // Operational, trusted error: send message to client
+  if (err.isOperational) {
+    console.log(err); // Logs the error to the console for debugging
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message
+    });
+  }
+  // Programming or unknown error: don't leak error details
+  console.error('ERROR 💥', err); // Logs the error to the console for debugging
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later.'
+  });
 };
 
+// Global error handling middleware
 module.exports = (err, req, res, next) => {
-  // Set default values for the error status code (500 for server error) and status ('error')
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
+  err.statusCode = err.statusCode || 500; // Sets default status code to 500 if not already set
+  err.status = err.status || 'error'; // Sets default status to 'error' if not already set
 
-  // Check the current environment (development or production)
+  // Error handling for development environment
   if (process.env.NODE_ENV === 'development') {
-    // In development mode, send detailed error information
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res); // Sends detailed error response for development
   } else if (process.env.NODE_ENV === 'production') {
-    // In production mode, create a copy of the error object
-    let error = { ...err };
+    let error = { ...err }; // Creates a shallow copy of the error object
+    error.message = err.message; // Copies the error message
 
-    // Handle specific error types and convert them to operational errors
-    // Check if the error is a MongoDB CastError (invalid ObjectId)
-    if (error.name === 'CastError') error = handleCastErrorDB(error);
-
-    // Check if the error code is 11000, which indicates a duplicate key error in MongoDB
-    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-
-    // Check if the error is a MongoDB validation error
+    // Handles specific known error types
+    if (error.name === 'CastError') error = handleCastErrorDB(error); // Handles MongoDB cast errors
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error); // Handles MongoDB duplicate field errors
     if (error.name === 'ValidationError')
-      error = handleValidationErrorDB(error);
+      error = handleValidationErrorDB(error); // Handles MongoDB validation errors
+    if (error.name === 'JsonWebTokenError') error = handleJWTError(); // Handles invalid JWT errors
+    if (error.name === 'TokenExpiredError') error = handleJWTExpiredError(); // Handles expired JWT errors
 
-    // Check if the error is due to an invalid JSON Web Token (JWT)
-    if (error.name === 'JsonWebTokenError') error = handleJWTError();
-
-    // Check if the error is due to an expired JSON Web Token (JWT)
-    if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
-
-    // Send minimal error information in production mode
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res); // Sends minimal error response for production
   }
 };

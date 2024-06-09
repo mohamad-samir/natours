@@ -16,6 +16,7 @@ const signToken = id => {
     { expiresIn: process.env.JWT_EXPIRES_IN } // Token expiration from environment variables
   );
 };
+
 const createSendToken = (user, statusCode, res) => {
   // Generate a new JWT token for the user
   const token = signToken(user._id);
@@ -76,6 +77,16 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true // Ensures the cookie cannot be accessed via client-side scripts
+  });
+  res.status(200).json({
+    status: 'success'
+  });
+};
+
 // Middleware to protect routes and ensure the user is authenticated
 exports.protect = catchAsync(async (req, res, next) => {
   let token;
@@ -87,10 +98,13 @@ exports.protect = catchAsync(async (req, res, next) => {
   ) {
     // Extract the token from the authorization header
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
-  // 2. If no token is found, return an error indicating the user is not logged in
-  if (!token) return next(new AppError('You are not logged in', 401));
+  if (!token)
+    // 2. If no token is found, return an error indicating the user is not logged in
+    return next(new AppError('You are not logged in', 401));
 
   // 3. Verify the token using the JWT secret
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
@@ -112,10 +126,50 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // 6. Attach the current user to the request object
   req.user = currentUser;
+  res.locals.user = currentUser;
 
   // 7. Call the next middleware in the stack
   next();
 });
+
+// Middleware function to check if a user is logged in
+exports.isLoggedIn = async (req, res, next) => {
+  // Check if there is a JWT stored in the request cookies
+  if (req.cookies.jwt) {
+    try {
+      // 1) Verify token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+
+      // 2) Check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        // If user doesn't exist, proceed to the next middleware
+        return next();
+      }
+
+      // 3) Check if user changed password after the token was issued
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        // If user changed password, proceed to the next middleware
+        return next();
+      }
+
+      // THERE IS A LOGGED IN USER
+      // Attach user object to response locals
+      res.locals.user = currentUser;
+
+      // Proceed to the next middleware
+      return next();
+    } catch (err) {
+      // If any errors occur during token verification, proceed to the next middleware
+      return next();
+    }
+  }
+  // If no JWT in cookies, proceed to the next middleware
+  next();
+};
 
 // Middleware to restrict access based on user roles
 exports.restrictTo = (...roles) => {
