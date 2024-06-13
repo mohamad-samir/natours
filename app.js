@@ -70,11 +70,10 @@ app.use(
       frameAncestors: ["'self'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
-      upgradeInsecureRequests: []
+      upgradeInsecureRequests: true // Set to true instead of an empty array
     }
   })
 );
-
 // Use Morgan to log HTTP requests in development mode
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
