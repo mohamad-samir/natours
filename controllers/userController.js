@@ -1,30 +1,76 @@
 const multer = require('multer'); // Importing Multer for handling file uploads
+const sharp = require('sharp');
+// const path = require('path'); // Import the 'path' module to work with file and directory paths
+// const fs = require('fs'); // Importing fs module for file system operations
+
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError'); // Import custom error handling utility
 const factory = require('./handlerFactory');
 
+/*
+// Define the directory path where images uploaded by users will be stored.
+// This path is constructed relative to the current script's directory (__dirname).
+// It goes one level up from the current directory ('..'), then navigates through 'public/img/users'.
+const uploadDirectory = path.join(__dirname, '..', 'public', 'img', 'users');
+
+// Use fs.mkdirSync() to synchronously create the directory if it does not exist.
+// mkdirSync blocks the entire event loop while executing, which can be detrimental in a high-traffic environment.
+// The { recursive: true } option ensures that all parent directories in the path are also created if they don't exist.
+fs.mkdirSync(uploadDirectory, { recursive: true });
+*/
+/*
 // Setting up Multer disk storage configuration
 const multerStorage = multer.diskStorage({
   // Configuring the destination function to specify the folder where uploaded files will be stored
   destination: function(req, file, cb) {
     // Call the callback function with null as the first argument (indicating no error)
     // and the destination folder path as the second argument
-    cb(null, '/public/img/users'); // Files will be stored in the '/public/img/users' directory
+
+    // Files will be stored in the '/public/img/users' directory
+    // cb(null, '/public/img/users'); // didn't work caused ENONET error
+    // cb(null, uploadDirectory);  // solution using fs
+    cb(null, path.resolve(__dirname, '..', 'public', 'img', 'users')); // simpler solution that avoids using fs
+    // Requires the directory to be pre-existing, which means an error could occur if the directory is not set up correctly.
   },
 
   // Configuring the filename function to determine the name of the uploaded file
+
   filename: function(req, file, cb) {
     // Extracting the file extension from the mime type of the uploaded file
     // The mime type is in the format 'type/subtype', for example, 'image/jpeg'
     // We split the mime type string by '/' and take the second part to get the extension
+
     const ext = file.mimetype.split('/')[1];
 
     // Constructing the filename using the user ID from the request object and the current timestamp
-    // Filename is in the format 'user-{userID}-{currentTimestamp}.{extension}', for example, 'user-123456-1623364800000.jpg'
+    // Filename format is 'user-{userID}-{currentTimestamp}.{extension}', for example, 'user-123456-1623364800000.jpg'
     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
   }
 });
+*/
+/*
+the main issue causing the ENOENT error is likely
+the incorrect path specified in the destination function of the multerStorage configuration.
+The path /public/img/users is an absolute path, and it's likely that it should be a relative path from the root 
+of project directory. 
+Using path.join to construct the path can help ensure it is correct and platform-independent.
+
+Use path.join to construct the correct path.
+Ensure the directory exists before attempting to save the file.
+
+Summary of Changes:
+Path Construction: Using path.join(__dirname, '..', 'public', 'img', 'users') 
+to construct the path to the upload directory.
+Ensure Directory Exists: Using fs.mkdirSync(uploadDirectory, { recursive: true }); 
+to ensure the directory exists before any file is uploaded.
+By ensuring the upload directory exists and using the correct path construction, 
+the ENOENT error should be resolved. This setup also ensures that the directory is created 
+if it doesn't already exist, preventing similar issues in the future.
+*/
+
+// Using Multer memory storage to store files as buffers in memory req.file.buffer
+const multerStorage = multer.memoryStorage();
 
 // Function to filter uploaded files based on mime type
 // This function ensures that only image files are accepted for upload
@@ -38,19 +84,27 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
-// Example of how to use this storage configuration with Multer
 // Create an instance of Multer with the specified storage configuration and optional settings
 const upload = multer({
   storage: multerStorage, // Set the storage configuration defined above
-  // Optionally, add a file filter for validation
-  fileFilter: multerFilter
-  // Optionally, set file size limits (e.g., 5MB limit)
-  // limits: { fileSize: 1024 * 1024 * 5 }
+  fileFilter: multerFilter // Optionally, add a file filter for validation
+  // limits: { fileSize: 1024 * 1024 * 5 }   // Optionally, set file size limits (e.g., 5MB limit)
 });
 
 // Middleware to handle single file upload with the field name 'photo'
 exports.uploadUserPhoto = upload.single('photo');
 
+exports.resizeUserPhoto = (req, res, next) => {
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+  if (!req.file) return next();
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+};
 // Function to filter object properties based on allowed fields
 const filterObj = (obj, ...allowedFields) => {
   // Create a new empty object to store filtered properties
@@ -137,9 +191,8 @@ exports.createUser = (req, res) => {
 
 //Dont update password with this
 exports.updateUser = factory.updateOne(User);
-/**The save middleware is only called when using methods like
- * save or create.
- * findByIdAndUpdate and other update methods
- * bypass this middleware, leading to potential security risks. */
+/**save middleware is only called when using methods like save or create.
+ * findByIdAndUpdate and other update methods bypass this middleware, leading to potential security risks.
+ */
 
 exports.deleteUser = factory.deleteOne(User);

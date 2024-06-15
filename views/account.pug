@@ -29,10 +29,10 @@ block content
       .user-view__content
         .user-view__form-container
           h2.heading-secondary.ma-bt-md Your account settings
-          
+
           //- WITHOUT API
-          //- form.form.form-user-data(action='/submit-user-data' method='POST')
-          
+          //- form.form.form-user-data(action='/submit-user-data' method='POST' enctype='multipart/form-data')
+
           //- WITH API
           form.form.form-user-data
             .form__group
@@ -43,12 +43,16 @@ block content
               input#email.form__input(type='email', value=`${user.email}`, required, name='email')
             .form__group.form__photo-upload
               img.form__user-photo(src=`/img/users/${user.photo}`, alt='User photo')
-              a.btn-text(href='') Choose new photo
+
+              //- a.btn-text(href='') Choose new photo
+              input.form__upload(type='file', accept='image/*',id='photo',name='photo')
+              label(for='photo') Choose new photo
+
             .form__group.right
               button.btn.btn--small.btn--green Save settings
-              
+              //- the default behavior of a <button> element inside a <form> is a submit button type="submit" 
         .line &nbsp;
-        
+
         .user-view__form-container
           h2.heading-secondary.ma-bt-md Password change
           form.form.form-user-password
@@ -63,3 +67,9 @@ block content
               input#password-confirm.form__input(type='password', placeholder='••••••••', required, minlength='8')
             .form__group.right
               button.btn.btn--small.btn--green.btn--save-password Save password
+
+//- The absence of the type attribute on the button elements in Pug/Jade templates 
+//- results in them defaulting to type="submit". This default behavior allows users to submit the 
+//- respective forms (form-user-data and form-user-password) when clicking the associated buttons
+//- ("Save settings" and "Save password", respectively). Thus, these buttons effectively serve as 
+//- submit controls for their respective forms.

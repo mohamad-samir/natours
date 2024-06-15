@@ -1,8 +1,5 @@
 /* eslint-disable */
 
-// Disables all ESLint rules for this file. Useful for rapid prototyping or when you want
-// to temporarily ignore all linting issues.
-
 import '@babel/polyfill';
 // Import polyfills from Babel to ensure compatibility with older browsers that
 // do not support modern JavaScript features.
@@ -72,18 +69,33 @@ if (logOutBtn) {
   // Add an event listener to handle the click event and call the logout function.
 }
 
+// Check if userDataForm exists (is not null or undefined)
 if (userDataForm) {
-  // Check if the userDataForm element exists on the page.
+  // Add an event listener to the form for the 'submit' event
   userDataForm.addEventListener('submit', e => {
-    // Add an event listener to handle the form submission.
+    // Prevent the default form submission behavior
     e.preventDefault();
-    // Prevent the default form submission behavior to handle it via JavaScript.
-    const name = document.getElementById('name').value;
-    // Get the value of the name input field.
-    const email = document.getElementById('email').value;
-    // Get the value of the email input field.
-    updateSettings({ name, email }, 'data');
-    // Call the updateSettings function with the name and email, specifying the type of update as 'data'.
+
+    // Create a new FormData object to hold the form data
+    const form = new FormData();
+
+    // Append the 'name' field value to the FormData object
+    form.append('name', document.getElementById('name').value);
+
+    // Append the 'email' field value to the FormData object
+    form.append('email', document.getElementById('email').value);
+
+    // Append the 'photo' file input (as a file list) to the FormData object
+    // By using [0], you are accessing the first selected file in the list.
+    form.append('photo', document.getElementById('photo').files[0]);
+
+    // Uncomment these lines if you want to use plain object instead of FormData
+    // const name = document.getElementById('name').value;
+    // const email = document.getElementById('email').value;
+    // updateSettings({ name, email }, 'data');
+
+    // Call the updateSettings function, passing the FormData object and the 'data' string
+    updateSettings({ form }, 'data');
   });
 }
 
