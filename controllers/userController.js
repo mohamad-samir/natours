@@ -94,17 +94,20 @@ const upload = multer({
 // Middleware to handle single file upload with the field name 'photo'
 exports.uploadUserPhoto = upload.single('photo');
 
-exports.resizeUserPhoto = (req, res, next) => {
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) return next(); // If there's no file, proceed to the next middleware
+
   req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
-  if (!req.file) return next();
-  sharp(req.file.buffer)
+
+  await sharp(req.file.buffer)
     .resize(500, 500)
     .toFormat('jpeg')
     .jpeg({ quality: 90 })
     .toFile(`public/img/users/${req.file.filename}`);
 
-  next();
-};
+  next(); // Call next() after await completes successfully
+});
+
 // Function to filter object properties based on allowed fields
 const filterObj = (obj, ...allowedFields) => {
   // Create a new empty object to store filtered properties

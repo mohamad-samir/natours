@@ -47,6 +47,13 @@ router
   .patch(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
+    tourController.uploadTourImages,
+    // req.files will now contain:
+    // {
+    //   imageCover: [{ ...fileData }],
+    //   images: [{ ...fileData }, { ...fileData }, { ...fileData }]
+    // }
+    tourController.resizeTourImages,
     tourController.updateTour
   )
   .delete(

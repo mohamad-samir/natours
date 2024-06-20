@@ -11,7 +11,10 @@ export const updateSettings = async (data, type) => {
     const res = await axios({
       method: 'PATCH',
       url,
-      data
+      data,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
 
     if (res.data.status === 'success') {

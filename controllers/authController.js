@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken'); // Import jwt for token creation
 const User = require('./../models/userModel'); // Import User model
 const catchAsync = require('./../utils/catchAsync'); // Import asynchronous error handling utility
 const AppError = require('./../utils/appError'); // Import custom error handling utility
-const sendEmail = require('./../utils/email'); // Import email utility
+const Email = require('./../utils/email'); // Import email utility
 
 const signToken = id => {
   // Function to sign the JWT token
@@ -57,6 +57,10 @@ exports.signUp = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     role: req.body.role
   });
+
+  const url = `${req.protocol}://${req.get('host')}/me`;
+
+  await new Email(newUser, url).sendWelcome();
 
   createSendToken(newUser, 201, res);
 });
@@ -200,23 +204,13 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Save the user with the updated PasswordResetToken and passwordResetExpires fields
   await user.save({ validateBeforeSave: false });
 
-  // Create a URL address for resetting the password using the generated token
-  const resetURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/users/resetPassword/${resetToken}`;
-
-  // Email message containing the reset password URL
-  const message = `forgot your password submit a patch request with your 
-  new password and password confirm to ${resetURL}.\n if you didnt forget 
-  your password please ignore this email`;
-
   try {
-    // Send the email to the user's email address
-    await sendEmail({
-      email: user.email,
-      subject: 'your password reset token (valid for 10 min)',
-      message
-    });
+    // Create a URL address for resetting the password using the generated token
+    const resetURL = `${req.protocol}://${req.get(
+      'host'
+    )}/api/v1/users/resetPassword/${resetToken}`;
+
+    await new Email(user, resetURL).sendPasswordReset();
 
     // Successful response with message sent to the user's email
     res.status(200).json({

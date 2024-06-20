@@ -95,7 +95,7 @@ if (userDataForm) {
     // updateSettings({ name, email }, 'data');
 
     // Call the updateSettings function, passing the FormData object and the 'data' string
-    updateSettings({ form }, 'data');
+    updateSettings(form, 'data');
   });
 }
 
