@@ -15,13 +15,13 @@ module.exports = class Email {
   // Method to handle email transport configurations based on the environment
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
-      // If in production, use MailGun
+      // If in production, use ELASTICEMAIL
       return nodemailer.createTransport({
-        host: process.env.MAILGUN_SMTP_SERVER,
-        port: process.env.MAILGUN_SMTP_PORT,
+        host: process.env.ELASTICEMAIL_SMTP_SERVER,
+        port: process.env.ELASTICEMAIL_SMTP_PORT,
         auth: {
-          user: process.env.MAILGUN_USERNAME, // Full email address
-          pass: process.env.MAILGUN_PASSWORD // Mailgun SMTP password
+          user: process.env.ELASTICEMAIL_USERNAME, // Full email address
+          pass: process.env.ELASTICEMAIL_PASSWORD // ELASTICEMAIL SMTP password
         }
       });
     }
