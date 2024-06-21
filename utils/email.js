@@ -15,13 +15,13 @@ module.exports = class Email {
   // Method to handle email transport configurations based on the environment
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
-      // If in production, use ELASTICEMAIL
+      // If in production, use BREVO
       return nodemailer.createTransport({
-        host: process.env.ELASTICEMAIL_SMTP_SERVER,
-        port: process.env.ELASTICEMAIL_SMTP_PORT,
+        host: process.env.BREVO_SMTP_SERVER,
+        port: process.env.BREVO_SMTP_PORT,
         auth: {
-          user: process.env.ELASTICEMAIL_USERNAME, // Full email address
-          pass: process.env.ELASTICEMAIL_PASSWORD // ELASTICEMAIL SMTP password
+          user: process.env.BREVO_USERNAME, // Full email address
+          pass: process.env.BREVO_PASSWORD // BREVO SMTP password
         }
       });
     }
