@@ -1,5 +1,6 @@
 const Tour = require('./../models/tourModel');
 const User = require('./../models/userModel');
+const Booking = require('./../models/bookingModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError'); // Import custom error handling utility
 
@@ -40,4 +41,20 @@ exports.updateUserData = catchAsync(async (req, res, next) => {
   res
     .status(200)
     .render('account', { title: 'Your account', user: updatedUser });
+});
+
+// Define an asynchronous function to handle fetching user's booked tours and rendering them
+exports.getMyTours = catchAsync(async (req, res, next) => {
+  // Retrieve bookings associated with the current user from the database
+  const booking = await Booking.find({ user: req.user.id });
+
+  // Extract an array of tour IDs from the bookings retrieved
+  const tourIDs = booking.map(el => el.tour);
+
+  // Retrieve all tours that match the IDs extracted from tourIDs
+  const tours = await Tour.find({ _id: { $in: tourIDs } });
+
+  // Respond with a status code of 200 (OK) and render the 'overview' template
+  // Provide the title 'My Tours' and the retrieved tours array to the template for rendering
+  res.status(200).render('overview', { title: 'My Tours', tours });
 });

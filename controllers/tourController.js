@@ -2,7 +2,6 @@ const multer = require('multer'); // Importing Multer for handling file uploads
 const sharp = require('sharp');
 
 const Tour = require('./../models/tourModel');
-//const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const factory = require('./handlerFactory');

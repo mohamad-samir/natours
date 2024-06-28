@@ -3,7 +3,7 @@ extends base
 include _reviewCard
 
 block append head
-  script(src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js')
+  script(src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js', nonce=nonce)
   link(href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet')
 
 mixin overviewBox(label, text, icon)
@@ -85,4 +85,20 @@ block content
       .cta__content
         h2.heading-secondary What are you waiting for?
         p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
-        button.btn.btn--green.span-all-rows Book tour now!
+        if user
+          button.btn.btn--green.span-all-rows#book-tour(data-tour-id=`${tour.id}`) Book tour now!
+        else
+          a.btn.btn--green.span-all-rows(href='/login') Log in to book tour
+
+//- tour.bug file
+    // This Pug file (tour.bug) accesses the `user` object indirectly through the `isLoggedIn` middleware.
+    router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
+    // The `isLoggedIn` middleware verifies user authentication before proceeding to `viewsController.getTour`.
+
+  viewsController -> getTour
+    // In the `viewsController` module, specifically the `getTour` function:
+    // Send a successful HTTP response (status 200) and render the 'tour' template with dynamic data.
+    // The `tour` template can access `user` indirectly because `req.user` is set by the `isLoggedIn` middleware.
+    // The `tour` template can access `tour` because
+        res.status(200).render('tour', { title: `${tour.name} Tour`, tour });
+        in viewsController.getTour middleware

@@ -1,3 +1,14 @@
+// To resolve this issue, you need to remove useCreateIndex and useFindAndModify from your MongoDB
+// connection options. These options are now unnecessary because MongoDB Node.js driver versions
+// starting from 3.6 onward have default behaviors that align with the best practices for indexing and modification.
+
+// The warnings you are seeing indicate that the useNewUrlParser and useUnifiedTopology options in your MongoDB connection setup
+// are deprecated and will be removed in future major versions of the MongoDB Node.js driver (version 4.0.0 and onwards).
+
+// As MongoDB Node.js driver versions progress to 4.0.0 and beyond, you should plan to remove useNewUrlParser
+// and useUnifiedTopology from your mongoose.connect() options. The current setup is still compatible,
+// but future versions will no longer support these options.
+
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
@@ -17,11 +28,13 @@ const DB = process.env.DATABASE.replace(
 
 mongoose
   .connect(DB, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false
+    //useCreateIndex: true,
+    //useFindAndModify: false,
+    useNewUrlParser: true
+    //useUnifiedTopology: true
   })
-  .then(() => console.log('DB connection successful!'));
+  .then(() => console.log('DB connection successful!'))
+  .catch(err => console.log('DB connection error:', err));
 
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {

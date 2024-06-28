@@ -16,6 +16,8 @@ import { updateSettings } from './updateSettings';
 // Import updateSettings function from the updateSettings module.
 // This function updates user settings like name, email, or password.
 
+import { bookTour } from './stripe';
+
 // DOM ELEMENTS
 const mapBox = document.getElementById('map');
 // Select the HTML element with the id 'map'. This is where the map will be rendered.
@@ -35,6 +37,8 @@ const userDataForm = document.querySelector('.form-user-data');
 const userPasswordForm = document.querySelector('.form-user-password');
 // Select the HTML element with the class 'form-user-password'.
 // This form is used to update the user's password.
+
+const bookBtn = document.getElementById('book-tour');
 
 // DELEGATION
 
@@ -133,3 +137,14 @@ if (userPasswordForm) {
     // Clear the confirm password input field.
   });
 }
+
+if (bookBtn)
+  bookBtn.addEventListener('click', e => {
+    e.target.textContent = 'Processing...';
+    //data-tour-id from e.target.dataset will be converted to tourId in js
+    const { tourId } = e.target.dataset;
+    bookTour(tourId);
+  });
+
+// const alertMessage = document.querySelector('body').dataset.alert;
+// if (alertMessage) showAlert('success', alertMessage, 20);

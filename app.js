@@ -7,12 +7,14 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const { v4: uuidv4 } = require('uuid'); //generates a nonce value and attaches it to res.locals, making it available to the Pug template.
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const bookingRouter = require('./routes/bookingRoutes');
 const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
@@ -28,6 +30,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 1) GLOBAL MIDDLEWARES
 
+// Middleware to generate and attach nonce globally
+const addNonceToLocals = (req, res, next) => {
+  res.locals.nonce = uuidv4(); // Generate a nonce for this request
+  next();
+};
+
+// Attach middleware globally to all requests
+app.use(addNonceToLocals);
+
+const getCspNonce = (req, res) => `'nonce-${res.locals.nonce}'`;
+
 // Use Helmet to set various HTTP headers for security
 //app.use(helmet());
 //https://stackoverflow.com/questions/66650925/getting-error-message-while-try-to-load-mapbox
@@ -35,7 +48,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const scriptSrcUrls = [
   'https://api.tiles.mapbox.com/',
   'https://api.mapbox.com/',
-  'https://cdnjs.cloudflare.com'
+  'https://cdnjs.cloudflare.com',
+  'https://js.stripe.com', // This allows loading of Stripe's JavaScript library (v3) which is essential for client-side integration with Stripe.
+  'https://api.stripe.com', // This allows communication with Stripe's API endpoints, necessary for processing payments and other Stripe API functionalities.
+  'https://js.stripe.com/v3/'
 ];
 
 const styleSrcUrls = [
@@ -46,6 +62,7 @@ const styleSrcUrls = [
 
 const connectSrcUrls = [
   'https://api.mapbox.com/',
+  'https://events.mapbox.com',
   'https://a.tiles.mapbox.com/',
   'https://b.tiles.mapbox.com/',
   'ws://127.0.0.1:*' // Allow WebSocket connections to any port on localhost
@@ -53,6 +70,7 @@ const connectSrcUrls = [
 
 const fontSrcUrls = [
   'https://fonts.googleapis.com',
+  'https://fonts.gstatic.com',
   'https://fonts.gstatic.com'
 ];
 
@@ -61,16 +79,17 @@ app.use(
     directives: {
       defaultSrc: ["'self'"],
       connectSrc: ["'self'", ...connectSrcUrls],
-      scriptSrc: ["'self'", ...scriptSrcUrls],
+      scriptSrc: ["'self'", ...scriptSrcUrls, getCspNonce], // Use the function to dynamically insert nonce
       styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
       workerSrc: ["'self'", 'blob:'],
       objectSrc: ["'none'"],
       imgSrc: ["'self'", 'blob:', 'data:'],
-      fontSrc: ["'self'", ...fontSrcUrls],
+      fontSrc: ["'self'", ...fontSrcUrls, 'data:'], // Allow fonts from 'self', Google Fonts, and inline data if used
       frameAncestors: ["'self'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
-      upgradeInsecureRequests: true // Set to true instead of an empty array
+      upgradeInsecureRequests: true, // Set to true instead of an empty array
+      frameSrc: ["'self'", 'https://js.stripe.com'] // Allow frames from Stripe
     }
   })
 );
@@ -122,13 +141,26 @@ app.use((req, res, next) => {
   next(); // Pass control to the next middleware function
 });
 
+// Attach middleware globally to all requests
+app.use(addNonceToLocals);
+
 // 3) ROUTES
 
+/**
+ * API Route: When making an API request to get a list of tours, the client might make a request to
+ * http://yourdomain.com/api/v1/tours.
+ * This request would be handled by tourRouter, which returns data in a format like JSON.
+ * View Route: When a user wants to view a tour on the website, they might visit http://yourdomain.com/tour/slug.
+ * This request would be handled by viewRouter, which renders an HTML page displaying the tour information.
+ * api/v1 Prefix: Used for API routes to clearly separate backend API functionality and support versioning.
+ * No Prefix for viewRouter: Used for serving web pages and user interfaces, resulting in cleaner, user-friendly URLs.
+ */
 // Mount routers for different resources
 app.use('/', viewRouter); // Routes for rendering views
 app.use('/api/v1/tours', tourRouter); // Routes for tour-related APIs
 app.use('/api/v1/users', userRouter); // Routes for user-related APIs
 app.use('/api/v1/reviews', reviewRouter); // Routes for review-related APIs
+app.use('/api/v1/bookings', bookingRouter);
 
 // Middleware to handle all undefined routes (404 errors)
 app.all('*', (req, res, next) => {

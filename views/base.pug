@@ -23,5 +23,9 @@ html
 
     //- script(src='https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js')
     //- script(src='/js/mapbox.js')
-    //- script(src='/js/login.js')    
-    script(src='/js/bundle.js')
+    //- script(src='/js/login.js')  
+
+    //- Include the nonce variable passed from server-side
+    //- This assumes 'nonce' is available in the template context
+    script(src='https://js.stripe.com/v3/' nonce=nonce)
+    script(src='/js/bundle.js' nonce=nonce)
