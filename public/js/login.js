@@ -8,7 +8,7 @@ export const login = async (email, password) => {
     // Start a try block to handle potential errors in the login process.
     const res = await axios({
       method: 'POST',
-      url: 'http://127.0.0.1:3000/api/v1/users/login',
+      url: '/api/v1/users/login',
       data: {
         email,
         password
@@ -38,7 +38,7 @@ export const logout = async () => {
     // Start a try block to handle potential errors in the logout process.
     const res = await axios({
       method: 'GET',
-      url: 'http://127.0.0.1:3000/api/v1/users/logout'
+      url: '/api/v1/users/logout'
     });
     // Sending a GET request to the logout endpoint.
 

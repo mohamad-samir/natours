@@ -2,8 +2,7 @@
 node_modules/
 
 # Ignore environment variables file (if you have one)
-.env
-config.env
+*.env
 
 # Ignore log files
 logs/
