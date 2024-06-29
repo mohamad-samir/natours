@@ -28,3 +28,4 @@ npm-debug.log
 Thumbs.db
 
 .cache
+.parcel-cache
