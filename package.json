@@ -8,8 +8,8 @@
     "dev": "nodemon -r dotenv/config server.js",
     "start:prod": "NODE_ENV=production nodemon -r dotenv/config server.js",
     "debug": "ndb -r dotenv/config server.js",
-    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
-    "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
+    "watch:js": "parcel watch ./public/js/index.js --dist-dir ./public/js",
+    "build:js": "parcel build ./public/js/index.js --dist-dir ./public/js"
   },
   "author": "Jonas Schmedtmann",
   "license": "ISC",
