@@ -8,8 +8,8 @@
     "dev": "nodemon -r dotenv/config server.js",
     "start:prod": "NODE_ENV=production nodemon -r dotenv/config server.js",
     "debug": "ndb -r dotenv/config server.js",
-    "watch:js": "parcel watch ./public/js/index.js --dist-dir ./public/js",
-    "build:js": "parcel build ./public/js/index.js --dist-dir ./public/js"
+    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "build:js": "parcel build ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "author": "Jonas Schmedtmann",
   "license": "ISC",
@@ -50,8 +50,9 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-react": "^7.12.4",
-    "prettier": "^1.17.0",
-    "parcel": "^2.0.0"
+    "parcel": "^2.12.0",
+    "parcel-bundler": "^1.12.3",
+    "prettier": "^1.17.0"
   },
   "engines": {
     "node": ">=10.0.0"
