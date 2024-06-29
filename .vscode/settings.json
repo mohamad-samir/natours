@@ -1,6 +1,6 @@
 {
   "editor.tokenColorCustomizations": {
-    "comments": "#808080",
+    "comments": "",
     "textMateRules": [
       {
         "scope": "keyword",
