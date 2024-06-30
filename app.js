@@ -7,7 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
-const { v4: uuidv4 } = require('uuid'); //generates a nonce value and attaches it to res.locals, making it available to the Pug template.
+//const { v4: uuidv4 } = require('uuid'); //generates a nonce value and attaches it to res.locals, making it available to the Pug template.
 const compression = require('compression');
 
 const AppError = require('./utils/appError');
