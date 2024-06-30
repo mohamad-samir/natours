@@ -1,8 +1,8 @@
 const express = require('express');
-const tourController = require('./../controllers/tourController');
-const authController = require('./../controllers/authController');
+const tourController = require('../controllers/tourController');
+const authController = require('../controllers/authController');
 //const reviewController = require('./../controllers/reviewController');
-const reviewRouter = require('./../routes/reviewRoutes');
+const reviewRouter = require('./reviewRoutes');
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router
   .get(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide', 'guide'),
-    tourController.getMonthlyPlan
+    tourController.getMonthlyPlan,
   );
 
 router
@@ -38,7 +38,7 @@ router
   .post(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
-    tourController.createTour
+    tourController.createTour,
   );
 
 router
@@ -54,12 +54,12 @@ router
     //   images: [{ ...fileData }, { ...fileData }, { ...fileData }]
     // }
     tourController.resizeTourImages,
-    tourController.updateTour
+    tourController.updateTour,
   )
   .delete(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
-    tourController.deleteTour
+    tourController.deleteTour,
   );
 
 /* // Define a POST route for creating a review on a specific tour

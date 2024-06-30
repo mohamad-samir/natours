@@ -1,6 +1,6 @@
 const express = require('express');
-const userController = require('./../controllers/userController');
-const authController = require('./../controllers/authController');
+const userController = require('../controllers/userController');
+const authController = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -17,14 +17,14 @@ router.patch('/updateMyPassword', authController.updatePassword);
 router.get(
   '/me',
   userController.getMe, // Middleware to modify request parameters to fetch data of the authenticated user
-  userController.getUser // Controller function to retrieve user data
+  userController.getUser, // Controller function to retrieve user data
 );
 
 router.patch(
   '/updateMe',
   userController.uploadUserPhoto,
   userController.resizeUserPhoto,
-  userController.updateMe
+  userController.updateMe,
 );
 router.delete('/deleteMe', userController.deleteMe);
 

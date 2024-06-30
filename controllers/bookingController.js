@@ -2,10 +2,10 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Import the Tour model from the models directory to fetch tour details from the database.
-const Tour = require('./../models/tourModel');
-const Booking = require('./../models/bookingModel');
-const catchAsync = require('./../utils/catchAsync'); // Import a utility function to catch errors in async functions.
-const AppError = require('./../utils/appError'); // Import a custom error handling class.
+const Tour = require('../models/tourModel');
+const Booking = require('../models/bookingModel');
+const catchAsync = require('../utils/catchAsync'); // Import a utility function to catch errors in async functions.
+const AppError = require('../utils/appError'); // Import a custom error handling class.
 const factory = require('./handlerFactory'); // Import a set of handler functions for general CRUD operations.
 
 // Function to create a Stripe checkout session
@@ -42,18 +42,18 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
           product_data: {
             name: `${tour.name} Tour`, // Name of the tour.
             description: tour.summary, // Description of the tour.
-            images: [`https://www.natours.dev/img/tours/${tour.imageCover}`] // Image of the tour.
-          }
+            images: [`https://www.natours.dev/img/tours/${tour.imageCover}`], // Image of the tour.
+          },
         },
-        quantity: 1 // Quantity of the product being purchased (always 1 in this case).
-      }
-    ]
+        quantity: 1, // Quantity of the product being purchased (always 1 in this case).
+      },
+    ],
   });
 
   // 3) Create session as response
   res.status(200).json({
     status: 'success', // Status of the request.
-    session // The session object created by Stripe.
+    session, // The session object created by Stripe.
   });
 });
 

@@ -3,9 +3,9 @@ const sharp = require('sharp');
 // const path = require('path'); // Import the 'path' module to work with file and directory paths
 // const fs = require('fs'); // Importing fs module for file system operations
 
-const User = require('./../models/userModel');
-const catchAsync = require('./../utils/catchAsync');
-const AppError = require('./../utils/appError'); // Import custom error handling utility
+const User = require('../models/userModel');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError'); // Import custom error handling utility
 const factory = require('./handlerFactory');
 
 /*
@@ -87,7 +87,7 @@ const multerFilter = (req, file, cb) => {
 // Create an instance of Multer with the specified storage configuration and optional settings
 const upload = multer({
   storage: multerStorage, // Set the storage configuration defined above
-  fileFilter: multerFilter // Optionally, add a file filter for validation
+  fileFilter: multerFilter, // Optionally, add a file filter for validation
   // limits: { fileSize: 1024 * 1024 * 5 }   // Optionally, set file size limits (e.g., 5MB limit)
 });
 
@@ -114,7 +114,7 @@ const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
 
   // Loop through each property in the original object
-  Object.keys(obj).forEach(el => {
+  Object.keys(obj).forEach((el) => {
     // Check if the property is included in the allowed fields
     if (allowedFields.includes(el)) {
       // If included, add the property to the new object
@@ -141,8 +141,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         'Wrong route! Please use /updateMyPassword for password updates.',
-        400
-      )
+        400,
+      ),
     );
   }
 
@@ -155,7 +155,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   // Find the user by ID and update with the filtered data
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true, // Return the updated user document , not the original document before the update.
-    runValidators: true // Run validators on the updated fields
+    runValidators: true, // Run validators on the updated fields
   });
   /*When using findByIdAndUpdate, the default behavior is to return the document 
   as it was before the update. To return the modified document instead, you use 
@@ -169,7 +169,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   // Send a JSON response with the updated user data
   res.status(200).json({
     status: 'success', // Indicate that the update was successful
-    data: { user: updatedUser } // Include the updated user in the response data
+    data: { user: updatedUser }, // Include the updated user in the response data
   });
 });
 
@@ -188,7 +188,7 @@ exports.getUser = factory.getOne(User);
 exports.createUser = (req, res) => {
   res.status(500).json({
     status: 'error',
-    message: 'This route is not yet defined!'
+    message: 'This route is not yet defined!',
   });
 };
 

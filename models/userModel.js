@@ -7,50 +7,50 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'A user must have a name'] // Validation to ensure name is provided
+    required: [true, 'A user must have a name'], // Validation to ensure name is provided
   },
   email: {
     type: String,
     required: [true, 'A user must have an email'], // Validation to ensure email is provided
     unique: true, // Making sure the email is unique in the database
     lowercase: true, // Convert email to lowercase before saving
-    validate: [validator.isEmail, 'Please provide a valid email'] // Validate email format
+    validate: [validator.isEmail, 'Please provide a valid email'], // Validate email format
   },
   photo: {
     type: String,
-    default: 'default.jpg'
+    default: 'default.jpg',
   },
   role: {
     type: String,
     enum: ['user', 'guide', 'lead-guide', 'admin'],
-    default: 'user'
+    default: 'user',
   },
   password: {
     type: String,
     required: [true, 'A user must have a password'], // Validation for password
     minlength: 8, // Minimum length of 8 characters for the password
-    select: false // Do not return the password by default when querying
+    select: false, // Do not return the password by default when querying
   },
   passwordConfirm: {
     type: String,
     required: [true, 'Please confirm your password'], // Confirm password is required
     validator: {
       // Validator to ensure password and confirm password are the same
-      validate: function(el) {
+      validate: function (el) {
         return el === this.password;
       },
-      message: 'different passwords' // Error message if passwords are different
-    }
+      message: 'different passwords', // Error message if passwords are different
+    },
   },
   passwordChangedAt: Date, // Stores the time when the password was last changed
 
   passwordResetToken: String,
   passwordResetExpires: Date,
-  active: { type: Boolean, default: true, select: false }
+  active: { type: Boolean, default: true, select: false },
 });
 
 // Middleware to hash the password before saving the user document
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next(); // Only hash the password if it has been modified
 
   this.password = await bcrypt.hash(this.password, 12); // Hash the password with a cost of 12
@@ -58,7 +58,7 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   // If the password has not been modified or the document is new, move to the next middleware
   if (!this.isModified('password') || this.isNew) return next();
 
@@ -69,15 +69,15 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-userSchema.pre(/^find/, function(next) {
+userSchema.pre(/^find/, function (next) {
   // Modify the query to include only active users
   this.find({ active: { $ne: false } });
   next();
 });
 
-userSchema.methods.correctPassword = async function(
+userSchema.methods.correctPassword = async function (
   candidatePassword,
-  userPsaaword
+  userPsaaword,
 ) {
   // Compare the candidate password (plain text) with the hashed user password
   // bcrypt.compare() is an asynchronous function that returns a Promise,
@@ -86,7 +86,7 @@ userSchema.methods.correctPassword = async function(
 };
 
 // Check if password was changed after the JWT token was issued
-userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   // Check if the passwordChangedAt field exists and if it does, proceed with the comparison
   if (this.passwordChangedAt) {
     // Convert the passwordChangedAt timestamp to seconds (UNIX timestamp)
@@ -101,7 +101,7 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 };
 
 // Define a method on the user schema to generate a password reset token
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   // Generate a random token using 32 random bytes and convert it to a hexadecimal string
   const resetToken = crypto.randomBytes(32).toString('hex');
   // Hash the reset token using the SHA-256 algorithm

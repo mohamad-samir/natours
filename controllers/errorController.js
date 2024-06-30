@@ -1,13 +1,13 @@
-const AppError = require('./../utils/appError'); // Custom error class for application-specific errors
+const AppError = require('../utils/appError'); // Custom error class for application-specific errors
 
 // Handles MongoDB cast errors (e.g., invalid ObjectId)
-const handleCastErrorDB = err => {
+const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`; // Constructs a user-friendly error message
   return new AppError(message, 400); // Returns a new AppError with the constructed message and a 400 status code
 };
 
 // Handles MongoDB duplicate field errors (e.g., duplicate keys)
-const handleDuplicateFieldsDB = err => {
+const handleDuplicateFieldsDB = (err) => {
   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0]; // Extracts the duplicate field value from the error message
   //console.log(value); // Logs the duplicate value to the console for debugging
 
@@ -16,8 +16,8 @@ const handleDuplicateFieldsDB = err => {
 };
 
 // Handles MongoDB validation errors (e.g., required fields, min length)
-const handleValidationErrorDB = err => {
-  const errors = Object.values(err.errors).map(el => el.message); // Maps validation error messages into an array
+const handleValidationErrorDB = (err) => {
+  const errors = Object.values(err.errors).map((el) => el.message); // Maps validation error messages into an array
 
   const message = `Invalid input data. ${errors.join('. ')}`; // Constructs a user-friendly error message
   return new AppError(message, 400); // Returns a new AppError with the constructed message and a 400 status code
@@ -39,7 +39,7 @@ const sendErrorDev = (err, req, res) => {
       status: err.status,
       error: err,
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
   }
 
@@ -47,7 +47,7 @@ const sendErrorDev = (err, req, res) => {
   console.error('ERROR 💥', err); // Logs the error to the console for debugging
   return res.status(err.statusCode).render('error', {
     title: 'Something went wrong!',
-    msg: err.message
+    msg: err.message,
   });
 };
 
@@ -59,14 +59,14 @@ const sendErrorProd = (err, req, res) => {
     if (err.isOperational) {
       return res.status(err.statusCode).json({
         status: err.status,
-        message: err.message
+        message: err.message,
       });
     }
     // Programming or unknown error: don't leak error details
     console.error('ERROR 💥', err); // Logs the error to the console for debugging
     return res.status(500).json({
       status: 'error',
-      message: 'Something went very wrong!'
+      message: 'Something went very wrong!',
     });
   }
 
@@ -76,14 +76,14 @@ const sendErrorProd = (err, req, res) => {
     console.log(err); // Logs the error to the console for debugging
     return res.status(err.statusCode).render('error', {
       title: 'Something went wrong!',
-      msg: err.message
+      msg: err.message,
     });
   }
   // Programming or unknown error: don't leak error details
   console.error('ERROR 💥', err); // Logs the error to the console for debugging
   return res.status(err.statusCode).render('error', {
     title: 'Something went wrong!',
-    msg: 'Please try again later.'
+    msg: 'Please try again later.',
   });
 };
 

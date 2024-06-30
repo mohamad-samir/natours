@@ -1,9 +1,9 @@
 const multer = require('multer'); // Importing Multer for handling file uploads
 const sharp = require('sharp');
 
-const Tour = require('./../models/tourModel');
-const catchAsync = require('./../utils/catchAsync');
-const AppError = require('./../utils/appError');
+const Tour = require('../models/tourModel');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
 
 // Using Multer memory storage to store files as buffers in memory req.file.buffer
@@ -24,14 +24,14 @@ const multerFilter = (req, file, cb) => {
 // Create an instance of Multer with the specified storage configuration and optional settings
 const upload = multer({
   storage: multerStorage, // Set the storage configuration defined above to store files as buffers in memory req.file.buffer
-  fileFilter: multerFilter // Optionally, add a file filter for validation
+  fileFilter: multerFilter, // Optionally, add a file filter for validation
   // limits: { fileSize: 1024 * 1024 * 5 }   // Optionally, set file size limits (e.g., 5MB limit)
 });
 
 // Configures multer to accept multiple fields with specified names and maximum file counts.
 exports.uploadTourImages = upload.fields([
   { name: 'imageCover', maxCount: 1 },
-  { name: 'images', maxCount: 3 }
+  { name: 'images', maxCount: 3 },
 ]);
 // upload.single('image')  - req.file
 // upload.array('Images',5) - req.files
@@ -102,7 +102,7 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
 
       // Push the filename of the processed image into req.body.images array
       req.body.images.push(filename);
-    })
+    }),
   );
 
   // Call next() to proceed to the next middleware after all images are processed successfully
@@ -150,7 +150,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
   // Perform the aggregation on the Tour model
   const stats = await Tour.aggregate([
     {
-      $match: { ratingsAverage: { $gte: 4.5 } } // Match tours with ratingsAverage >= 4.5
+      $match: { ratingsAverage: { $gte: 4.5 } }, // Match tours with ratingsAverage >= 4.5
     },
     {
       $group: {
@@ -160,12 +160,12 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
         avgRating: { $avg: '$ratingsAverage' }, // Calculate the average of ratingsAverage
         avgPrice: { $avg: '$price' }, // Calculate the average of price
         minPrice: { $min: '$price' }, // Find the minimum price
-        maxPrice: { $max: '$price' } // Find the maximum price
-      }
+        maxPrice: { $max: '$price' }, // Find the maximum price
+      },
     },
     {
-      $sort: { avgPrice: 1 } // Sort the results by avgPrice in ascending order
-    }
+      $sort: { avgPrice: 1 }, // Sort the results by avgPrice in ascending order
+    },
     // Uncomment the following block if you want to exclude 'EASY' difficulty from the results
     // {
     //   $match: { _id: { $ne: 'EASY' } }
@@ -176,8 +176,8 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success', // Indicate that the request was successful
     data: {
-      stats // Include the stats data in the response
-    }
+      stats, // Include the stats data in the response
+    },
   });
 });
 
@@ -186,44 +186,44 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
 
   const plan = await Tour.aggregate([
     {
-      $unwind: '$startDates'
+      $unwind: '$startDates',
     },
     {
       $match: {
         startDates: {
           $gte: new Date(`${year}-01-01`),
-          $lte: new Date(`${year}-12-31`)
-        }
-      }
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
     },
     {
       $group: {
         _id: { $month: '$startDates' },
         numTourStarts: { $sum: 1 },
-        tours: { $push: '$name' }
-      }
+        tours: { $push: '$name' },
+      },
     },
     {
-      $addFields: { month: '$_id' }
+      $addFields: { month: '$_id' },
     },
     {
       $project: {
-        _id: 0
-      }
+        _id: 0,
+      },
     },
     {
-      $sort: { numTourStarts: -1 }
+      $sort: { numTourStarts: -1 },
     },
     {
-      $limit: 12
-    }
+      $limit: 12,
+    },
   ]);
 
   res.status(200).json({
     status: 'success',
     data: {
-      plan
-    }
+      plan,
+    },
   });
 });
 
@@ -247,7 +247,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
 
   // Find tours within the specified radius using a geo query
   const tours = await Tour.find({
-    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
   });
   /**Geospatial queries can be resource-intensive, especially for large datasets.
 Properly indexing the geospatial field (using a 2dsphere index) is crucial for efficient queries. */
@@ -256,7 +256,7 @@ Properly indexing the geospatial field (using a 2dsphere index) is crucial for e
   res.status(200).json({
     status: 'success',
     results: tours.length,
-    data: { data: tours }
+    data: { data: tours },
   });
 });
 
@@ -308,26 +308,26 @@ exports.getDistances = catchAsync(async (req, res, next) => {
       $geoNear: {
         near: {
           type: 'Point',
-          coordinates: [parseFloat(lng), parseFloat(lat)] // Center point for the distance calculations
+          coordinates: [parseFloat(lng), parseFloat(lat)], // Center point for the distance calculations
         },
         distanceField: 'distance', // The calculated distance will be stored in this field
         distanceMultiplier: multiplier, // Convert the distance to the desired unit
-        spherical: true // Use spherical calculations
-      }
+        spherical: true, // Use spherical calculations
+      },
     },
     {
       // Optional: Project the fields to return in the result
       $project: {
         distance: 1, // Include the distance field
-        name: 1 // Include the name field of the tour
-      }
-    }
+        name: 1, // Include the name field of the tour
+      },
+    },
   ]);
 
   // Send the result as a JSON response
   res.status(200).json({
     status: 'success',
-    data: { data: distances }
+    data: { data: distances },
   });
   /*{
     "status": "success",

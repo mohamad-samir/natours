@@ -21,8 +21,8 @@ module.exports = class Email {
         port: process.env.BREVO_SMTP_PORT,
         auth: {
           user: process.env.BREVO_USERNAME, // Full email address
-          pass: process.env.BREVO_PASSWORD // BREVO SMTP password
-        }
+          pass: process.env.BREVO_PASSWORD, // BREVO SMTP password
+        },
       });
     }
 
@@ -32,8 +32,8 @@ module.exports = class Email {
       port: process.env.EMAIL_PORT, // Email port from environment variables
       auth: {
         user: process.env.EMAIL_USERNAME, // Email username from environment variables
-        pass: process.env.EMAIL_PASSWORD // Email password from environment variables
-      }
+        pass: process.env.EMAIL_PASSWORD, // Email password from environment variables
+      },
     });
   }
   //Once you have created the transport object, you can use its methods, such as sendMail(),
@@ -45,7 +45,7 @@ module.exports = class Email {
     const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
       firstName: this.firstName, // Passing the first name to the pug template
       url: this.url, // Passing the URL to the pug template
-      subject // Passing the email subject to the pug template
+      subject, // Passing the email subject to the pug template
     });
     /* { firstName: this.firstName, url: this.url, subject }: This is an object that contains the data that will be 
         passed to the Pug template. In this case, you are passing the firstName, url, and subject variables to the template. 
@@ -64,7 +64,7 @@ module.exports = class Email {
       to: this.to, // Recipient address
       subject, // Subject line
       html, // HTML body content
-      text: htmlToText.fromString(html) // Plain text body content converted from HTML
+      text: htmlToText.fromString(html), // Plain text body content converted from HTML
     };
 
     // 3) Create a transport and send email
@@ -85,7 +85,7 @@ module.exports = class Email {
   async sendPasswordReset() {
     await this.send(
       'passwordReset',
-      'Your password reset token (valid for only 10 minutes)'
+      'Your password reset token (valid for only 10 minutes)',
       // Using the send method to send a password reset email with a specific template and subject
     );
   }

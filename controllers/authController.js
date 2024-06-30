@@ -1,22 +1,20 @@
 const crypto = require('crypto');
 const { promisify } = require('util'); // Import jwt for token creation
 const jwt = require('jsonwebtoken'); // Import jwt for token creation
-const User = require('./../models/userModel'); // Import User model
-const catchAsync = require('./../utils/catchAsync'); // Import asynchronous error handling utility
-const AppError = require('./../utils/appError'); // Import custom error handling utility
-const Email = require('./../utils/email'); // Import email utility
+const User = require('../models/userModel'); // Import User model
+const catchAsync = require('../utils/catchAsync'); // Import asynchronous error handling utility
+const AppError = require('../utils/appError'); // Import custom error handling utility
+const Email = require('../utils/email'); // Import email utility
 
-const signToken = id => {
+const signToken = (id) =>
   // Function to sign the JWT token
-  return jwt.sign(
+  jwt.sign(
     {
-      id // Embed user ID in JWT
+      id, // Embed user ID in JWT
     },
     process.env.JWT_SECRET, // Secret key for JWT
-    { expiresIn: process.env.JWT_EXPIRES_IN } // Token expiration from environment variables
+    { expiresIn: process.env.JWT_EXPIRES_IN }, // Token expiration from environment variables
   );
-};
-
 const createSendToken = (user, statusCode, res) => {
   // Generate a new JWT token for the user
   const token = signToken(user._id);
@@ -24,9 +22,9 @@ const createSendToken = (user, statusCode, res) => {
   // Configure cookie options
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
-    httpOnly: true // Ensures the cookie cannot be accessed via client-side scripts
+    httpOnly: true, // Ensures the cookie cannot be accessed via client-side scripts
   };
 
   // Set 'secure' flag for cookies in production environment
@@ -44,7 +42,7 @@ const createSendToken = (user, statusCode, res) => {
   res.status(statusCode).json({
     status: 'success',
     token,
-    data: { user }
+    data: { user },
   });
 };
 
@@ -55,7 +53,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    role: req.body.role
+    role: req.body.role,
   });
 
   const url = `${req.protocol}://${req.get('host')}/me`;
@@ -84,10 +82,10 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true // Ensures the cookie cannot be accessed via client-side scripts
+    httpOnly: true, // Ensures the cookie cannot be accessed via client-side scripts
   });
   res.status(200).json({
-    status: 'success'
+    status: 'success',
   });
 };
 
@@ -117,14 +115,14 @@ exports.protect = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return next(
-      new AppError('User belonging to this token does not exist', 401)
+      new AppError('User belonging to this token does not exist', 401),
     );
   }
 
   // 5. Check if the user changed their password after the token was issued
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('User recently changed password. Please log in again.', 401)
+      new AppError('User recently changed password. Please log in again.', 401),
     );
   }
 
@@ -144,7 +142,7 @@ exports.isLoggedIn = async (req, res, next) => {
       // 1) Verify token
       const decoded = await promisify(jwt.verify)(
         req.cookies.jwt,
-        process.env.JWT_SECRET
+        process.env.JWT_SECRET,
       );
 
       // 2) Check if user still exists
@@ -176,21 +174,21 @@ exports.isLoggedIn = async (req, res, next) => {
 };
 
 // Middleware to restrict access based on user roles
-exports.restrictTo = (...roles) => {
+exports.restrictTo =
+  (...roles) =>
   // Return a middleware function
-  return (req, res, next) => {
+  (req, res, next) => {
     // Check if the user's role is included in the allowed roles
     if (!roles.includes(req.user.role)) {
       // If the user's role is not allowed, create an AppError with a 403 status code
       return next(
-        new AppError('You do not have permission to perform this action', 403)
+        new AppError('You do not have permission to perform this action', 403),
       );
     }
 
     // If the user's role is allowed, proceed to the next middleware
     next();
   };
-};
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Find the user using the email address provided in the request
@@ -207,7 +205,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   try {
     // Create a URL address for resetting the password using the generated token
     const resetURL = `${req.protocol}://${req.get(
-      'host'
+      'host',
     )}/api/v1/users/resetPassword/${resetToken}`;
 
     await new Email(user, resetURL).sendPasswordReset();
@@ -215,7 +213,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     // Successful response with message sent to the user's email
     res.status(200).json({
       status: 'success',
-      message: 'token sent to email'
+      message: 'token sent to email',
     });
   } catch (err) {
     // If sending the email fails, remove the token and expiry date
@@ -238,7 +236,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // Find a user in the database based on the hashed token and ensure that the token hasn't expired
   const user = await User.findOne({
     passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() }
+    passwordResetExpires: { $gt: Date.now() },
   });
 
   // Handle case where no user is found or the token has expired

@@ -11,7 +11,7 @@ router.get(
   '/',
   bookingController.createBookingCheckout,
   authController.isLoggedIn,
-  viewsController.getOverview
+  viewsController.getOverview,
 );
 
 // Define a GET route to render the 'tour' template at the URL '/tour'
@@ -26,7 +26,7 @@ router.get('/my-tours', authController.protect, viewsController.getMyTours);
 router.post(
   '/submit-user-data',
   authController.protect,
-  viewsController.updateUserData
+  viewsController.updateUserData,
 );
 
 // Export the router to be used elsewhere in the application

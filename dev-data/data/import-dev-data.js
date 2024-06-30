@@ -4,9 +4,9 @@ const mongoose = require('mongoose'); // Mongoose for MongoDB connection and sch
 const dotenv = require('dotenv'); // Dotenv for loading environment variables from a config file
 
 // Import models
-const Tour = require('./../../models/tourModel');
-const User = require('./../../models/userModel');
-const Review = require('./../../models/reviewModel');
+const Tour = require('../../models/tourModel');
+const User = require('../../models/userModel');
+const Review = require('../../models/reviewModel');
 
 // Load environment variables from config.env file
 dotenv.config({ path: './config.env' });
@@ -14,7 +14,7 @@ dotenv.config({ path: './config.env' });
 // Replace <PASSWORD> in the DATABASE URL with the actual database password from environment variables
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
+  process.env.DATABASE_PASSWORD,
 );
 
 // Connect to the MongoDB database using Mongoose
@@ -22,7 +22,7 @@ mongoose
   .connect(DB, {
     useNewUrlParser: true,
     useCreateIndex: true,
-    useFindAndModify: false
+    useFindAndModify: false,
   })
   .then(() => console.log('DB connection successful!'));
 
@@ -30,7 +30,7 @@ mongoose
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
 const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'));
 const reviews = JSON.parse(
-  fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8')
+  fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'),
 );
 
 // Function to import data into the database

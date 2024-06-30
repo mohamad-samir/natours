@@ -7,25 +7,25 @@ const bookingSchema = new mongoose.Schema({
   tour: {
     type: mongoose.Schema.ObjectId, // The tour field is a reference to a Tour document
     ref: 'Tour', // Reference the Tour model
-    required: [true, 'Booking must belong to a Tour!'] // This field is required with a custom error message
+    required: [true, 'Booking must belong to a Tour!'], // This field is required with a custom error message
   },
   user: {
     type: mongoose.Schema.ObjectId, // The user field is a reference to a User document
     ref: 'User', // Reference the User model
-    required: [true, 'Booking must belong to a User!'] // This field is required with a custom error message
+    required: [true, 'Booking must belong to a User!'], // This field is required with a custom error message
   },
   price: {
     type: Number, // The price of the booking
-    required: [true, 'Booking must have a price.'] // This field is required with a custom error message
+    required: [true, 'Booking must have a price.'], // This field is required with a custom error message
   },
   createdAt: {
     type: Date, // The date the booking was created
-    default: Date.now() // Default value is the current date and time
+    default: Date.now(), // Default value is the current date and time
   },
   paid: {
     type: Boolean, // Whether the booking has been paid for
-    default: true // Default value is true
-  }
+    default: true, // Default value is true
+  },
 });
 
 //Automatic Population: The pre-hook middleware ensures that every time a find query is executed on
@@ -33,10 +33,10 @@ const bookingSchema = new mongoose.Schema({
 //This simplifies querying by automatically including related data.
 
 // Middleware to populate the user and tour fields when a find query is executed
-bookingSchema.pre(/^find/, function(next) {
+bookingSchema.pre(/^find/, function (next) {
   this.populate('user').populate({
     path: 'tour', // Populate the tour field
-    select: 'name' // Only select the name field from the Tour document
+    select: 'name', // Only select the name field from the Tour document
   });
   next(); // Call the next middleware
 });

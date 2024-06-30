@@ -1,6 +1,6 @@
 const express = require('express');
-const reviewController = require('./../controllers/reviewController');
-const authController = require('./../controllers/authController');
+const reviewController = require('../controllers/reviewController');
+const authController = require('../controllers/authController');
 
 // Create a new router instance and merge parameters from parent routes
 const router = express.Router({ mergeParams: true });
@@ -20,19 +20,19 @@ router
   .post(
     authController.restrictTo('user'),
     reviewController.setTourUserIds,
-    reviewController.createReview
+    reviewController.createReview,
   );
 
 router
   .route('/:id')
   .patch(
     authController.restrictTo('user', 'admin'),
-    reviewController.updateReview
+    reviewController.updateReview,
   )
   .get(reviewController.getReview)
   .delete(
     authController.restrictTo('user', 'admin'),
-    reviewController.deleteReview
+    reviewController.deleteReview,
   );
 
 module.exports = router;

@@ -31,34 +31,29 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 1) GLOBAL MIDDLEWARES
 
-// Middleware to generate and attach nonce globally
-const addNonceToLocals = (req, res, next) => {
-  res.locals.nonce = uuidv4(); // Generate a nonce for this request
+// Middleware to add nonce to res.locals
+app.use((req, res, next) => {
+  res.locals.nonce = uuidv4();
   next();
-};
-
-// Attach middleware globally to all requests
-app.use(addNonceToLocals);
-
-const getCspNonce = (req, res) => `'nonce-${res.locals.nonce}'`;
+});
 
 // Use Helmet to set various HTTP headers for security
-//app.use(helmet());
+app.use(helmet());
 //https://stackoverflow.com/questions/66650925/getting-error-message-while-try-to-load-mapbox
-
+/*
 const scriptSrcUrls = [
   'https://api.tiles.mapbox.com/',
   'https://api.mapbox.com/',
   'https://cdnjs.cloudflare.com',
   'https://js.stripe.com', // This allows loading of Stripe's JavaScript library (v3) which is essential for client-side integration with Stripe.
   'https://api.stripe.com', // This allows communication with Stripe's API endpoints, necessary for processing payments and other Stripe API functionalities.
-  'https://js.stripe.com/v3/'
+  'https://js.stripe.com/v3/',
 ];
 
 const styleSrcUrls = [
   'https://api.mapbox.com/',
   'https://api.tiles.mapbox.com/',
-  'https://fonts.googleapis.com/'
+  'https://fonts.googleapis.com/',
 ];
 
 const connectSrcUrls = [
@@ -66,13 +61,13 @@ const connectSrcUrls = [
   'https://events.mapbox.com',
   'https://a.tiles.mapbox.com/',
   'https://b.tiles.mapbox.com/',
-  'ws://127.0.0.1:*' // Allow WebSocket connections to any port on localhost
+  'ws://127.0.0.1:*', // Allow WebSocket connections to any port on localhost
 ];
 
 const fontSrcUrls = [
   'https://fonts.googleapis.com',
   'https://fonts.gstatic.com',
-  'https://fonts.gstatic.com'
+  'https://fonts.gstatic.com',
 ];
 
 app.use(
@@ -80,7 +75,11 @@ app.use(
     directives: {
       defaultSrc: ["'self'"],
       connectSrc: ["'self'", ...connectSrcUrls],
-      scriptSrc: ["'self'", ...scriptSrcUrls, getCspNonce], // Use the function to dynamically insert nonce
+      scriptSrc: (req, res) => [
+        "'self'",
+        ...scriptSrcUrls,
+        `'nonce-${res.locals.nonce}'`,
+      ], // Use the function to dynamically insert nonce
       styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
       workerSrc: ["'self'", 'blob:'],
       objectSrc: ["'none'"],
@@ -90,10 +89,11 @@ app.use(
       baseUri: ["'self'"],
       formAction: ["'self'"],
       upgradeInsecureRequests: true, // Set to true instead of an empty array
-      frameSrc: ["'self'", 'https://js.stripe.com'] // Allow frames from Stripe
-    }
-  })
+      frameSrc: ["'self'", 'https://js.stripe.com'], // Allow frames from Stripe
+    },
+  }),
 );
+*/
 // Use Morgan to log HTTP requests in development mode
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -103,7 +103,7 @@ if (process.env.NODE_ENV === 'development') {
 const limiter = rateLimit({
   max: 100, // Maximum number of requests per windowMs
   windowMs: 60 * 60 * 1000, // Time window in milliseconds (1 hour)
-  message: 'Too many requests from this IP, please try again in an hour!' // Message to send when rate limit is exceeded
+  message: 'Too many requests from this IP, please try again in an hour!', // Message to send when rate limit is exceeded
 });
 
 // Apply the rate limiter to all API routes
@@ -129,9 +129,9 @@ app.use(
       'ratingsAverage',
       'maxGroupSize',
       'difficulty',
-      'price'
-    ]
-  })
+      'price',
+    ],
+  }),
 );
 
 // Use compression middleware to compress HTTP responses
@@ -144,9 +144,6 @@ app.use((req, res, next) => {
 
   next(); // Pass control to the next middleware function
 });
-
-// Attach middleware globally to all requests
-app.use(addNonceToLocals);
 
 // 3) ROUTES
 
