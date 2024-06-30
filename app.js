@@ -31,15 +31,53 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 1) GLOBAL MIDDLEWARES
 
-// Middleware to add nonce to res.locals
-app.use((req, res, next) => {
-  res.locals.nonce = uuidv4();
-  next();
-});
-
 // Use Helmet to set various HTTP headers for security
-app.use(helmet());
+//app.use(helmet());
 //https://stackoverflow.com/questions/66650925/getting-error-message-while-try-to-load-mapbox
+
+// Set up Helmet middleware with custom CSP directives
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': [
+          "'self'",
+          "'unsafe-inline'",
+          'https://js.stripe.com',
+          'https://api.mapbox.com',
+        ],
+        'script-src-elem': [
+          "'self'",
+          'https://js.stripe.com',
+          'https://api.mapbox.com',
+        ],
+        'worker-src': ["'self'", 'blob:'], // Allow blob URLs for workers
+        'style-src': [
+          "'self'",
+          "'unsafe-inline'",
+          'https://api.mapbox.com',
+          'https://fonts.googleapis.com',
+        ],
+        'img-src': ["'self'", 'blob:', 'data:'],
+        'font-src': [
+          "'self'",
+          'https://fonts.googleapis.com',
+          'https://fonts.gstatic.com',
+          'data:',
+        ],
+        'frame-src': ["'self'", 'https://js.stripe.com'],
+        'connect-src': [
+          "'self'",
+          'https://api.mapbox.com',
+          'https://events.mapbox.com',
+          'https://*.tiles.mapbox.com',
+        ], // Add Mapbox and other necessary connect sources
+      },
+    },
+  }),
+);
+
 /*
 const scriptSrcUrls = [
   'https://api.tiles.mapbox.com/',
@@ -69,30 +107,38 @@ const fontSrcUrls = [
   'https://fonts.gstatic.com',
   'https://fonts.gstatic.com',
 ];
+*/
 
-app.use(
+// Middleware to add nonce to res.locals
+// Middleware to add nonce to res.locals and set CSP
+
+// Middleware to add nonce to res.locals
+/* app.use((req, res, next) => {
+  // Generate a unique nonce for each request
+  res.locals.nonce = uuidv4();
+  next();
+}); 
+
+app.use((req, res, next) => {
+  // Set Helmet's Content Security Policy (CSP) with dynamic nonce
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
       connectSrc: ["'self'", ...connectSrcUrls],
-      scriptSrc: (req, res) => [
-        "'self'",
-        ...scriptSrcUrls,
-        `'nonce-${res.locals.nonce}'`,
-      ], // Use the function to dynamically insert nonce
+      scriptSrc: ["'self'", ...scriptSrcUrls, `'nonce-${res.locals.nonce}'`], // Include nonce dynamically
       styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
       workerSrc: ["'self'", 'blob:'],
       objectSrc: ["'none'"],
       imgSrc: ["'self'", 'blob:', 'data:'],
-      fontSrc: ["'self'", ...fontSrcUrls, 'data:'], // Allow fonts from 'self', Google Fonts, and inline data if used
+      fontSrc: ["'self'", ...fontSrcUrls, 'data:'],
       frameAncestors: ["'self'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
-      upgradeInsecureRequests: true, // Set to true instead of an empty array
-      frameSrc: ["'self'", 'https://js.stripe.com'], // Allow frames from Stripe
+      upgradeInsecureRequests: true,
+      frameSrc: ["'self'", 'https://js.stripe.com'],
     },
-  }),
-);
+  })(req, res, next); // Invoke Helmet middleware with req, res, next
+});
 */
 // Use Morgan to log HTTP requests in development mode
 if (process.env.NODE_ENV === 'development') {
