@@ -54,7 +54,7 @@ if (mapBox) {
 
 if (loginForm) {
   // Check if the loginForm element exists on the page.
-  loginForm.addEventListener('submit', e => {
+  loginForm.addEventListener('submit', (e) => {
     // Add an event listener to handle the form submission.
     e.preventDefault();
     // Prevent the default form submission behavior to handle it via JavaScript.
@@ -76,7 +76,7 @@ if (logOutBtn) {
 // Check if userDataForm exists (is not null or undefined)
 if (userDataForm) {
   // Add an event listener to the form for the 'submit' event
-  userDataForm.addEventListener('submit', e => {
+  userDataForm.addEventListener('submit', (e) => {
     // Prevent the default form submission behavior
     e.preventDefault();
 
@@ -105,7 +105,7 @@ if (userDataForm) {
 
 if (userPasswordForm) {
   // Check if the userPasswordForm element exists on the page.
-  userPasswordForm.addEventListener('submit', async e => {
+  userPasswordForm.addEventListener('submit', async (e) => {
     // Add an event listener to handle the form submission.
     e.preventDefault();
     // Prevent the default form submission behavior to handle it via JavaScript.
@@ -121,7 +121,7 @@ if (userPasswordForm) {
 
     await updateSettings(
       { passwordCurrent, password, passwordConfirm },
-      'password'
+      'password',
     );
     // Call the updateSettings function with the current password, new password,
     // and confirm password, specifying the type of update as 'password'.
@@ -139,7 +139,7 @@ if (userPasswordForm) {
 }
 
 if (bookBtn)
-  bookBtn.addEventListener('click', e => {
+  bookBtn.addEventListener('click', (e) => {
     e.target.textContent = 'Processing...';
     //data-tour-id from e.target.dataset will be converted to tourId in js
     const { tourId } = e.target.dataset;

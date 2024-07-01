@@ -52,7 +52,7 @@ app.use(
           'https://js.stripe.com',
           'https://api.mapbox.com',
         ],
-        'worker-src': ["'self'", 'blob:'], // Allow blob URLs for workers
+        'worker-src': ["'self'", 'blob:'],
         'style-src': [
           "'self'",
           "'unsafe-inline'",
@@ -72,7 +72,10 @@ app.use(
           'https://api.mapbox.com',
           'https://events.mapbox.com',
           'https://*.tiles.mapbox.com',
-        ], // Add Mapbox and other necessary connect sources
+          'ws://localhost', // Allow WebSocket connection to localhost
+          'ws://127.0.0.1', // Allow WebSocket connection to 127.0.0.1
+          'ws://127.0.0.1:*', // Allow WebSocket connection to specific port on 127.0.0.1
+        ],
       },
     },
   }),
