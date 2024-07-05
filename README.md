@@ -116,11 +116,11 @@ go to dashboard > project > settings > Environment Variables
 - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) - Cloud database service
 - [Pug](https://pugjs.org/api/getting-started.html) - High performance template engine
 - [JSON Web Token](https://jwt.io/) - Security token
-- [parcel-bundler](https://parceljs.org/) - An extremely fast bundler for the web
+- [Parcel-bundler](https://parceljs.org/) - An extremely fast bundler for the web
 - [Stripe](https://stripe.com/) - Online payment API
 - [Postman](https://www.getpostman.com/) - API testing
 - [Mailtrap](https://mailtrap.io/) & [Mailgun](https://www.mailgun.com/) - Email delivery platform
-- [vercel](https://vercel.com/) - Cloud platform
+- [Vercel](https://vercel.com/) - Cloud platform
 
 ## To-do
 
